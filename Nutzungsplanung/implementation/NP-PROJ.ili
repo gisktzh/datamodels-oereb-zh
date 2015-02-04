@@ -1,0 +1,830 @@
+TRANSFER Nutzungsplanung_ZH;
+
+MODEL Nutzungsplanung_ZH_V1_Proj
+
+DOMAIN
+    ZHPoint = COORD2 480000.000 70000.000 850000.000 310000.000;
+    ZHSurface = SURFACE
+        WITH (STRAIGHTS, ARCS)
+        VERTEX COORD2 480000.000 70000.000 850000.000 310000.000
+        WITHOUT OVERLAPS > 0.001;
+    ZHArea = AREA
+        WITH (STRAIGHTS, ARCS)
+        VERTEX COORD2 480000.000 70000.000 850000.000 310000.000
+        WITHOUT OVERLAPS > 0.001;
+    ZHLine = POLYLINE
+        WITH (STRAIGHTS, ARCS)
+        VERTEX COORD2 480000.000 70000.000 850000.000 310000.000;
+    ZHDirectedLine = POLYLINE
+        WITH (STRAIGHTS, ARCS)
+        VERTEX COORD2 480000.000 70000.000 850000.000 310000.000;
+    ZHBFSNr = [1 .. 9999];
+    RechtsstatusObjekt =
+       (inKraft,
+        laufendeAenderung
+           (Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren),
+        Aufhebung
+           (Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren),
+        provisorisch);
+    Verbindlichkeit =
+       (Nutzungsplanfestlegung,
+        orientierend,
+        hinweisend,
+        wegleitend);
+    Behoerde =
+       (Regierungsrat,
+        Baudirektion,
+        Volkswirtschaftsdirektion,
+        andere);
+    BehoerdeGewalt =
+       (Legislative,
+        Exekutive);
+    JaNein =
+       (ja,
+        nein);
+    TextGroesse =
+       (klein,
+        mittel,
+        gross);
+    DokumentArt =
+       (Rechtsvorschrift,
+        GesetzlicheGrundlage,
+        Hinweis);
+    DokumentRechtsstatus =
+       (inKraft,
+        laufendeAenderung,
+        Aufhebung,
+        provisorisch);
+    CHCantonCode =
+       (ZH,
+        BE,
+        LU,
+        UR,
+        SZ,
+        OW,
+        NW,
+        GL,
+        ZG,
+        FR,
+        SO,
+        BS,
+        BL,
+        SH,
+        AR,
+        AI,
+        SG,
+        GR,
+        AG,
+        TG,
+        TI,
+        VD,
+        VS,
+        NE,
+        GE,
+        JU);
+    CHMunicipalityCode = [1 .. 9999];
+    URI = TEXT*256;
+    BLOB = TEXT*2400;
+    UUIDOID = TEXT*36;
+    Orientation = GRADS 0.00000 399.99999;
+    Prozent = [0 .. 100];
+    Ausnuetzungsziffer = [0 .. 499];
+    Baumassenziffer = [0.00 .. 99.99];
+    Ueberbauungsziffer = [0 .. 99];
+    Vollgeschosse = [0 .. 99];
+    Dachgeschosse = [0 .. 9];
+    Untergeschosse = [0 .. 9];
+    Freiflaechenziffer = [0 .. 99];
+    Gebaeudehoehe = [0.0 .. 999.0];
+    Firsthoehe = [0.0 .. 9.9];
+    GN_Codes_Bund =
+       (C11,
+        C12,
+        C13,
+        C14,
+        C15,
+        C16,
+        C17,
+        C18,
+        C19,
+        C21,
+        C22,
+        C23,
+        C29,
+        C31,
+        C32,
+        C39,
+        C41,
+        C42,
+        C43,
+        C44,
+        C49);
+    GN_Codes_Kanton =
+       (C1101,
+        C1102,
+        C1103,
+        C1201,
+        C1202,
+        C1301,
+        C1302,
+        C1303,
+        C1401,
+        C1402,
+        C1501,
+        C1601,
+        C2101,
+        C2102,
+        C3101,
+        C3102,
+        C3201,
+        C4201,
+        C4202,
+        C4203,
+        C4301,
+        C4401,
+        C4901);
+    Gestaltungsplanart =
+       (oeffentlich,
+        privat,
+        oeffentlich_oder_privat);
+    UL_Codes_Flaechen_Bund =
+       (C51,
+        C52,
+        C53,
+        C59,
+        C61,
+        C62,
+        C63,
+        C69);
+    UL_Codes_Linien_Bund =
+       (C71,
+        C79);
+    UL_Codes_Punkte_Bund =
+       (C81,
+        C82,
+        C89);
+    UL_Codes_Flaechen_Kanton =
+       (C6101,
+        C6102,
+        C6103,
+        C6201,
+        C6901,
+        C6902,
+        C6903,
+        C6904,
+        C6905,
+        C6906,
+        C6907);
+    UL_Codes_Linien_Kanton =
+       (C7901);
+    UL_Codes_Punkte_Kanton =
+       (C8901);
+    UL_Codes_Flaechen_Gemeinde =
+       (C610101,
+        C610102,
+        C610201,
+        C610301,
+        C620101,
+        C690101,
+        C690201,
+        C690301,
+        C690401,
+        C690501,
+        C690601,
+        C690701,
+        C690702,
+        C690703,
+        C690704,
+        C690705,
+        C690706,
+        C690707,
+        C690708,
+        C690709,
+        C690710,
+        C6907xx);
+    UL_Codes_Linien_Gemeinde =
+       (C790101,
+        C7901xx);
+    UL_Codes_Punkte_Gemeinde =
+       (C890101,
+        C8901xx);
+    UL_Wirksamkeit =
+       (links,
+        rechts,
+        beidseits);
+    LS_Codes =
+       (Keine_ES,
+        ES_I,
+        ES_II,
+        ES_III,
+        ES_IV);
+    LS_Festlegungstyp =
+       (Rahmennutzungsplanung
+           (Allgemein,
+            MaessigStoerendesGewerbeZulaessig,
+            Laermvorbelastung),
+        Sondernutzungsplanung);
+
+TOPIC NP =
+
+    TABLE Projekt = 
+        Nummer: TEXT*80;
+        Bewirtschafter: TEXT*80;
+        Eroeffnungsdatum: DATE;
+        Projektzustand: OPTIONAL RechtsstatusObjekt;
+        DatumLetztePublikation: OPTIONAL DATE;
+    IDENT
+        Nummer;
+    END Projekt;
+
+    TABLE Projekt_Perimeter = 
+        ProjektRef: -> Projekt;
+        Geometrie: ZHSurface;
+    NO IDENT
+    END Projekt_Perimeter;
+
+    TABLE Variante = 
+        Nummer: TEXT*80;
+        Eroeffnungsdatum: DATE;
+        ProjektRef: -> Projekt;
+    IDENT
+        Nummer, ProjektRef;
+    END Variante;
+
+    TABLE Ausschluss = 
+        Variante_A_Ref: -> Variante;
+        Variante_B_Ref: -> Variante;
+    NO IDENT
+    END Ausschluss;
+
+    TABLE RV_Dokument = 
+        Art: DokumentArt;
+        Titel: TEXT*80;
+        OffiziellerTitel: OPTIONAL TEXT*2400;
+        Abkuerzung: OPTIONAL TEXT*10;
+        OffizielleNr: TEXT*20;
+        Kanton: OPTIONAL CHCantonCode;
+        Gemeinde: OPTIONAL CHMunicipalityCode;
+        publiziertAb: DATE;
+        Rechtsstatus: DokumentRechtsstatus;
+        TextImWeb: OPTIONAL URI;
+        Dokument: OPTIONAL BLOB;
+        Bemerkungen: OPTIONAL TEXT*2400;
+    NO IDENT
+    END RV_Dokument;
+
+    TABLE RV_HinweisWeitereDokumente = 
+        Ursprung: -> RV_Dokument;
+        Hinweis: -> RV_Dokument;
+    NO IDENT
+    END RV_HinweisWeitereDokumente;
+
+    TABLE GN_Typ_Kanton = 
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Code: GN_Codes_Kanton;
+    IDENT
+        Code;
+    END GN_Typ_Kanton;
+
+    TABLE GN_Typ_Gemeinde = 
+        BFS_Nummer: ZHBFSNr;
+        Gemeinde_Name: OPTIONAL TEXT*80;
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Verbindlichkeit: Verbindlichkeit;
+        Code: TEXT*7;
+        Typ_Kanton: -> GN_Typ_Kanton;
+    IDENT
+        BFS_Nummer, Code;  !![REDIR]
+    END GN_Typ_Gemeinde;
+
+    TABLE GN_Zonenflaeche = 
+        publiziertAb: DATE;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Identifikator: UUIDOID;
+        Vorpruefung_Behoerde: OPTIONAL TEXT*80;
+        Vorpruefung_Datum: OPTIONAL DATE;
+        Vorpruefung_Nummer: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum: OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        Genehmigung_Behoerde_Auswahl: OPTIONAL Behoerde;
+        Genehmigung_Behoerde: OPTIONAL TEXT*80;
+        Genehmigung_Datum: OPTIONAL DATE;
+        Genehmigung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Rechtsstatus: RechtsstatusObjekt;
+        Ausnuetzungsziffer_Min: OPTIONAL Ausnuetzungsziffer;
+        Ausnuetzungsziffer_Max: OPTIONAL Ausnuetzungsziffer;
+        Baumassenziffer_Min: OPTIONAL Baumassenziffer;
+        Baumassenziffer_Max: OPTIONAL Baumassenziffer;
+        Ueberbauungsziffer_Min: OPTIONAL Ueberbauungsziffer;
+        Ueberbauungsziffer_Max: OPTIONAL Ueberbauungsziffer;
+        Vollgeschosse_Max: OPTIONAL Vollgeschosse;
+        Dachgeschosse_Max: OPTIONAL Dachgeschosse;
+        Untergeschosse_Max: OPTIONAL Untergeschosse;
+        Freiflaechenziffer_Min: OPTIONAL Freiflaechenziffer;
+        Gesamthoehe: OPTIONAL Gebaeudehoehe;
+        Gebaeudehoehe_Max: OPTIONAL Gebaeudehoehe;
+        Firsthoehe_Max: OPTIONAL Firsthoehe;
+        Wohnanteil_Min: OPTIONAL Prozent;
+        Wohnanteil_Max: OPTIONAL Prozent;
+        Gewerbeanteil_Min: OPTIONAL Prozent;
+        Gewerbeanteil_Max: OPTIONAL Prozent;
+        Innenliegende_Freihaltezone: OPTIONAL JaNein;
+        Typ_Gemeinde: -> GN_Typ_Gemeinde;
+        RG_GID: OPTIONAL TEXT*17;
+        ProjektRef: -> Projekt;
+        VarianteRef: OPTIONAL -> Variante;
+        Geometrie: ZHSurface;
+    IDENT
+        Identifikator;
+    END GN_Zonenflaeche;
+
+    TABLE GN_Zonenflaeche_Text = 
+        Text: TEXT*80;
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        HAli: OPTIONAL HALIGNMENT;
+        VAli: OPTIONAL VALIGNMENT;
+        Groesse: OPTIONAL TextGroesse;
+        Objekt: -> GN_Zonenflaeche;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END GN_Zonenflaeche_Text;
+
+    TABLE GN_Zonenflaeche_Symbol = 
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        Objekt: -> GN_Zonenflaeche;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END GN_Zonenflaeche_Symbol;
+
+    TABLE Bez_RV_Doku_GN_Typ_Kanton = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> GN_Typ_Kanton;
+    NO IDENT
+    END Bez_RV_Doku_GN_Typ_Kanton;
+
+    TABLE Bez_RV_Doku_GN_Typ_Gemeinde = 
+        Dokument: -> RV_Dokument;
+        Typ_Gemeinde: -> GN_Typ_Gemeinde;
+    NO IDENT
+    END Bez_RV_Doku_GN_Typ_Gemeinde;
+
+    TABLE Bez_RV_Doku_GN_Objekt = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> GN_Zonenflaeche;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_RV_Doku_GN_Objekt;
+
+    TABLE UL_Flaeche_Typ_Kanton = 
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Code: UL_Codes_Flaechen_Kanton;
+    IDENT
+        Code;
+    END UL_Flaeche_Typ_Kanton;
+
+    TABLE UL_Flaeche_Typ_Gemeinde = 
+        BFS_Nummer: ZHBFSNr;
+        Gemeinde_Name: OPTIONAL TEXT*80;
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Verbindlichkeit: Verbindlichkeit;
+        Code_Auswahl: UL_Codes_Flaechen_Gemeinde;
+        Code: TEXT*7;
+        Typ_Kanton: -> UL_Flaeche_Typ_Kanton;
+    IDENT
+        BFS_Nummer, Code;  !![REDIR]
+    END UL_Flaeche_Typ_Gemeinde;
+
+    TABLE UL_Flaeche = 
+        publiziertAb: DATE;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Identifikator: UUIDOID;
+        Vorpruefung_Behoerde: OPTIONAL TEXT*80;
+        Vorpruefung_Datum: OPTIONAL DATE;
+        Vorpruefung_Nummer: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum: OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        Genehmigung_Behoerde_Auswahl: OPTIONAL Behoerde;
+        Genehmigung_Behoerde: OPTIONAL TEXT*80;
+        Genehmigung_Datum: OPTIONAL DATE;
+        Genehmigung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Rechtsstatus: RechtsstatusObjekt;
+        Gestaltungsplanart: OPTIONAL Gestaltungsplanart;
+        Bezeichnung_Gemeinde: OPTIONAL TEXT*80;
+        Typ_Gemeinde: -> UL_Flaeche_Typ_Gemeinde;
+        RG_GID: OPTIONAL TEXT*17;
+        ProjektRef: -> Projekt;
+        VarianteRef: OPTIONAL -> Variante;
+        Geometrie: ZHSurface;
+    IDENT
+        Identifikator;
+    END UL_Flaeche;
+
+    TABLE UL_Bereich = 
+        Identifikator: UUIDOID;
+        Bezeichnung_Gemeinde: OPTIONAL TEXT*80;
+        Flaeche: -> UL_Flaeche;
+        RG_GID: OPTIONAL TEXT*17;
+        Geometrie: ZHSurface;
+    IDENT
+        Identifikator;
+    END UL_Bereich;
+
+    TABLE UL_Flaeche_Text = 
+        Text: TEXT*80;
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        HAli: OPTIONAL HALIGNMENT;
+        VAli: OPTIONAL VALIGNMENT;
+        Groesse: OPTIONAL TextGroesse;
+        Objekt: -> UL_Flaeche;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END UL_Flaeche_Text;
+
+    TABLE UL_Flaeche_Symbol = 
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        Objekt: -> UL_Flaeche;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END UL_Flaeche_Symbol;
+
+    TABLE UL_Linie_Typ_Kanton = 
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Code: UL_Codes_Linien_Kanton;
+    IDENT
+        Code;
+    END UL_Linie_Typ_Kanton;
+
+    TABLE UL_Linie_Typ_Gemeinde = 
+        BFS_Nummer: ZHBFSNr;
+        Gemeinde_Name: OPTIONAL TEXT*80;
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Verbindlichkeit: Verbindlichkeit;
+        Code_Auswahl: UL_Codes_Linien_Gemeinde;
+        Code: TEXT*7;
+        Typ_Kanton: -> UL_Linie_Typ_Kanton;
+    IDENT
+        BFS_Nummer, Code;  !![REDIR]
+    END UL_Linie_Typ_Gemeinde;
+
+    TABLE UL_Linie = 
+        publiziertAb: DATE;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Identifikator: UUIDOID;
+        Vorpruefung_Behoerde: OPTIONAL TEXT*80;
+        Vorpruefung_Datum: OPTIONAL DATE;
+        Vorpruefung_Nummer: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum: OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        Genehmigung_Behoerde_Auswahl: OPTIONAL Behoerde;
+        Genehmigung_Behoerde: OPTIONAL TEXT*80;
+        Genehmigung_Datum: OPTIONAL DATE;
+        Genehmigung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Rechtsstatus: RechtsstatusObjekt;
+        Wirksamkeit: OPTIONAL UL_Wirksamkeit;
+        Typ_Gemeinde: -> UL_Linie_Typ_Gemeinde;
+        RG_GID: OPTIONAL TEXT*17;
+        ProjektRef: -> Projekt;
+        VarianteRef: OPTIONAL -> Variante;
+        Geometrie: ZHDirectedLine;
+    IDENT
+        Identifikator;
+    END UL_Linie;
+
+    TABLE UL_Linie_Text = 
+        Text: TEXT*80;
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        HAli: OPTIONAL HALIGNMENT;
+        VAli: OPTIONAL VALIGNMENT;
+        Groesse: OPTIONAL TextGroesse;
+        Objekt: -> UL_Linie;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END UL_Linie_Text;
+
+    TABLE UL_Linie_Symbol = 
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        Objekt: -> UL_Linie;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END UL_Linie_Symbol;
+
+    TABLE UL_Punkt_Typ_Kanton = 
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Code: UL_Codes_Punkte_Kanton;
+    IDENT
+        Code;
+    END UL_Punkt_Typ_Kanton;
+
+    TABLE UL_Punkt_Typ_Gemeinde = 
+        BFS_Nummer: ZHBFSNr;
+        Gemeinde_Name: OPTIONAL TEXT*80;
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Code_Auswahl: UL_Codes_Punkte_Gemeinde;
+        Code: TEXT*7;
+        Typ_Kanton: -> UL_Punkt_Typ_Kanton;
+    IDENT
+        BFS_Nummer, Code;  !![REDIR]
+    END UL_Punkt_Typ_Gemeinde;
+
+    TABLE UL_Punkt = 
+        publiziertAb: DATE;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Identifikator: UUIDOID;
+        Vorpruefung_Behoerde: OPTIONAL TEXT*80;
+        Vorpruefung_Datum: OPTIONAL DATE;
+        Vorpruefung_Nummer: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum: OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        Genehmigung_Behoerde_Auswahl: OPTIONAL Behoerde;
+        Genehmigung_Behoerde: OPTIONAL TEXT*80;
+        Genehmigung_Datum: OPTIONAL DATE;
+        Genehmigung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Rechtsstatus: RechtsstatusObjekt;
+        Ori: OPTIONAL Orientation;
+        Geometrie: ZHPoint;
+        Typ_Gemeinde: -> UL_Punkt_Typ_Gemeinde;
+        RG_GID: OPTIONAL TEXT*17;
+        ProjektRef: -> Projekt;
+        VarianteRef: OPTIONAL -> Variante;
+    IDENT
+        Identifikator;
+    END UL_Punkt;
+
+    TABLE UL_Punkt_Text = 
+        Text: TEXT*80;
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        HAli: OPTIONAL HALIGNMENT;
+        VAli: OPTIONAL VALIGNMENT;
+        Groesse: OPTIONAL TextGroesse;
+        Objekt: -> UL_Punkt;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END UL_Punkt_Text;
+
+    TABLE Bez_RV_Doku_UL_Flaeche_Typ_Kanton = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> UL_Flaeche_Typ_Kanton;
+    NO IDENT
+    END Bez_RV_Doku_UL_Flaeche_Typ_Kanton;
+
+    TABLE Bez_RV_Doku_UL_Flaeche_Typ_Gemeinde = 
+        Dokument: -> RV_Dokument;
+        Typ_Gemeinde: -> UL_Flaeche_Typ_Gemeinde;
+    NO IDENT
+    END Bez_RV_Doku_UL_Flaeche_Typ_Gemeinde;
+
+    TABLE Bez_RV_Doku_UL_Flaeche = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> UL_Flaeche;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_RV_Doku_UL_Flaeche;
+
+    TABLE Bez_RV_Doku_UL_Linie_Typ_Kanton = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> UL_Linie_Typ_Kanton;
+    NO IDENT
+    END Bez_RV_Doku_UL_Linie_Typ_Kanton;
+
+    TABLE Bez_RV_Doku_UL_Linie_Typ_Gemeinde = 
+        Dokument: -> RV_Dokument;
+        Typ_Gemeinde: -> UL_Linie_Typ_Gemeinde;
+    NO IDENT
+    END Bez_RV_Doku_UL_Linie_Typ_Gemeinde;
+
+    TABLE Bez_RV_Doku_UL_Linie = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> UL_Linie;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_RV_Doku_UL_Linie;
+
+    TABLE Bez_RV_Doku_UL_Punkt_Typ_Kanton = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> UL_Punkt_Typ_Kanton;
+    NO IDENT
+    END Bez_RV_Doku_UL_Punkt_Typ_Kanton;
+
+    TABLE Bez_RV_Doku_UL_Punkt_Typ_Gemeinde = 
+        Dokument: -> RV_Dokument;
+        Typ_Gemeinde: -> UL_Punkt_Typ_Gemeinde;
+    NO IDENT
+    END Bez_RV_Doku_UL_Punkt_Typ_Gemeinde;
+
+    TABLE Bez_RV_Doku_UL_Punkt = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> UL_Punkt;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_RV_Doku_UL_Punkt;
+
+    TABLE LS_Typ = 
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+        Code: LS_Codes;
+        Aufgestuft: JaNein;
+        Verbindlichkeit: Verbindlichkeit;
+    IDENT
+        Code, Aufgestuft;
+    END LS_Typ;
+
+    TABLE LS_Festlegung = 
+        BFS_Nummer: ZHBFSNr;
+        Gemeinde_Name: OPTIONAL TEXT*80;
+        publiziertAb: DATE;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Identifikator: UUIDOID;
+        Vorpruefung_Behoerde: OPTIONAL TEXT*80;
+        Vorpruefung_Datum: OPTIONAL DATE;
+        Vorpruefung_Nummer: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum: OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        Genehmigung_Behoerde_Auswahl: OPTIONAL Behoerde;
+        Genehmigung_Behoerde: OPTIONAL TEXT*80;
+        Genehmigung_Datum: OPTIONAL DATE;
+        Genehmigung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Rechtsstatus: RechtsstatusObjekt;
+        Typ_Kanton: -> LS_Typ;
+        RG_GID: OPTIONAL TEXT*17;
+        ProjektRef: -> Projekt;
+        VarianteRef: OPTIONAL -> Variante;
+        Geometrie: ZHSurface;
+        Festlegungstyp: OPTIONAL LS_Festlegungstyp;
+    IDENT
+        Identifikator;
+    END LS_Festlegung;
+
+    TABLE LS_Text = 
+        Text: TEXT*80;
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        HAli: OPTIONAL HALIGNMENT;
+        VAli: OPTIONAL VALIGNMENT;
+        Groesse: OPTIONAL TextGroesse;
+        Objekt: -> LS_Festlegung;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END LS_Text;
+
+    TABLE LS_Symbol = 
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        Objekt: -> LS_Festlegung;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END LS_Symbol;
+
+    TABLE Bez_RV_Doku_LS_Typ = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> LS_Typ;
+    NO IDENT
+    END Bez_RV_Doku_LS_Typ;
+
+    TABLE Bez_RV_Doku_LS_Objekt = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> LS_Festlegung;
+        RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_RV_Doku_LS_Objekt;
+
+    TABLE BE_Aenderung = 
+        Beschlussname: TEXT*80;
+        Beschlussnummer: TEXT*80;
+        Beschlussbehoerde: TEXT*80;
+        Beschlussdatum: TEXT*80;
+        Geschaeftsnummer: OPTIONAL TEXT*80;
+    NO IDENT
+    END BE_Aenderung;
+
+    TABLE Bez_RV_Doku_BE_Aenderung = 
+        Dokument: -> RV_Dokument;
+        Aenderung: -> BE_Aenderung;
+    NO IDENT
+    END Bez_RV_Doku_BE_Aenderung;
+
+    TABLE Bez_RV_Doku_BE_Aenderung_Objekt = 
+        Aenderung: -> BE_Aenderung;
+        Objekt_GN_Z: OPTIONAL -> GN_Zonenflaeche;
+        Objekt_UL_F: OPTIONAL -> UL_Flaeche;
+        Objekt_UL_L: OPTIONAL -> UL_Linie;
+        Objekt_UL_P: OPTIONAL -> UL_Punkt;
+        Objekt_LS_F: OPTIONAL -> LS_Festlegung;
+    NO IDENT
+    END Bez_RV_Doku_BE_Aenderung_Objekt;
+
+END NP.
+
+TOPIC TransferMetadaten =
+
+    TABLE Darstellungsdienst = 
+        VerweisWMS: OPTIONAL URI;
+        LegendeImWeb: OPTIONAL URI;
+    NO IDENT
+    END Darstellungsdienst;
+
+    TABLE Amt = 
+        Name: TEXT*80;
+        AmtImWeb: OPTIONAL URI;
+    NO IDENT
+    END Amt;
+
+    TABLE Datenbestand = 
+        BasketId: OPTIONAL TEXT*2400;
+        Stand: DATE;
+        Lieferdatum: OPTIONAL DATE;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        weitereMetadaten: OPTIONAL URI;
+        zustaendigeStelle: -> Amt;
+        Darstellungsdienst: -> Darstellungsdienst;
+    NO IDENT
+    END Datenbestand;
+
+END TransferMetadaten.
+
+END Nutzungsplanung_ZH_V1_Proj.
+
+FORMAT FREE;
+
+CODE
+    BLANK = 0x7e, UNDEFINED = DEFAULT, CONTINUE = DEFAULT;
+    TID = ANY;
+END.

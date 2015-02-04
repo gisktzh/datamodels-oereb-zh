@@ -1,0 +1,832 @@
+INTERLIS 2.3;
+
+!!===================================================================================== 
+!! Kanton Zuerich 
+!! Baudirektion Kanton Zuerich
+!! Amt für Raumentwicklung
+!! Abteilung Raumplanung
+!! Stampfenbachstrasse 14 / Postfach
+!! 8090 Zuerich
+!!
+!! www.bd.zh.ch
+!!
+!! Geobasisdatensatz Nr. 130  Gewaesserschutzbereiche
+!! Geobasisdatensatz Nr. 131  Grundwasserschutzzonen
+!! Geobasisdatensatz Nr. 132  Grundwasserschutzareale
+!!===================================================================================== 
+!! Revision History
+!! 2013.08.26/tg
+!! 2013.09.09/tg
+!! 2013.10.28/ht
+!! 2013.11.28/gb
+!! 2014.04.11/tg Anpassungen fuer implementiertes INTERLIS 1 Modell
+!!===================================================================================== 
+
+!!@ technicalContact = are@bd.zh.ch
+!!@ furtherInformation = http://www.bd.zh.ch
+!!@ IDGeoIV = "130,131,132"
+
+MODEL Grundwasser_ZH_V1 (de) AT "http://www.bd.zh.ch/models" VERSION "2014-04-11"  =
+
+   IMPORTS UNQUALIFIED INTERLIS;
+   IMPORTS UNQUALIFIED Units;
+   IMPORTS CoordSys;
+   IMPORTS UNQUALIFIED GeometryCHLV03_V1;
+   IMPORTS UNQUALIFIED CHAdminCodes_V1;
+
+   REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
+      OBJECTS OF GeoCartesian2D: CHLV03
+      OBJECTS OF GeoHeight: SwissOrthometricAlt;
+
+
+   !! Model Domains
+   !!==============
+
+   DOMAIN
+
+      ZHPoint = COORD
+         480000.000 .. 850000.000 [m] {CHLV03[1]},
+          70000.000 .. 310000.000 [m] {CHLV03[2]},
+         ROTATION 2 -> 1;
+
+      ZHSurface = SURFACE WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+      ZHArea = AREA WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+
+      ZHBFSNr = 1 .. 9999;
+
+      RechtsstatusObjekt = (
+         inKraft,
+         laufendeAenderung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren
+         ),
+         Aufhebung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren
+         )
+      );
+
+      TextGroesse = (
+         klein,
+         mittel,
+         gross
+      );
+
+
+   !! Rechtsvorschriften
+   !!===================
+
+   TOPIC Rechtsvorschriften =
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         DokumentArt = (
+           Rechtsvorschrift,
+           GesetzlicheGrundlage,
+         Hinweis
+         );
+
+         DokumentRechtsstatus = (
+            inKraft,
+            laufendeAenderung,
+            Aufhebung,
+            provisorisch
+         );
+
+
+      !! Classes
+      !!--------
+
+      CLASS RV_Dokument =
+         Art : MANDATORY DokumentArt;
+         Titel : MANDATORY TEXT*80;
+         OffiziellerTitel : TEXT*2400;
+         Abkuerzung : TEXT*10;
+         OffizielleNr : MANDATORY TEXT*20;
+         Kanton : CHAdminCodes_V1.CHCantonCode;
+         Gemeinde : CHAdminCodes_V1.CHMunicipalityCode;
+         publiziertAb : MANDATORY XMLDate;
+         Rechtsstatus : MANDATORY DokumentRechtsstatus;
+         TextImWeb : URI;
+         Dokument : BLACKBOX BINARY;
+         Bemerkungen : MTEXT*2400;
+      END RV_Dokument;
+
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION RV_HinweisWeitereDokumente =
+         Ursprung -- {0..*} RV_Dokument;
+         Hinweis -- {0..*} RV_Dokument;
+      END RV_HinweisWeitereDokumente;
+
+   END Rechtsvorschriften;
+
+
+   !! Grundstrukturen
+   !!================
+
+   TOPIC Grundstrukturen (ABSTRACT) =
+      DEPENDS ON Grundwasser_ZH_V1.Rechtsvorschriften;
+
+      !! Classes Allgemein
+      !!------------------
+
+      CLASS Basis_Typ_Kanton (ABSTRACT)  =
+      END Basis_Typ_Kanton;
+
+      CLASS Basis_Typ_Gemeinde (ABSTRACT) =
+         BFS_Nummer : MANDATORY ZHBFSNr;
+         Gemeinde_Name : TEXT*80;
+      END Basis_Typ_Gemeinde;
+
+      CLASS Basis_Objekt (ABSTRACT)  =
+      END Basis_Objekt;
+
+      CLASS Basis_Objekt_Text (ABSTRACT)  =
+         !! Textinhalt abhängig vom Darstellungsmodell
+         Text : MANDATORY TEXT*80;
+         Geometrie : MANDATORY ZHPoint;
+         Ori : Orientation;
+         HAli : HALIGNMENT;
+         VAli : VALIGNMENT;
+         Groesse : TextGroesse;
+      END Basis_Objekt_Text;
+
+      CLASS Basis_Objekt_Symbol (ABSTRACT)  =
+         Geometrie : MANDATORY ZHPoint;
+         Ori : Orientation;
+      END Basis_Objekt_Symbol;
+
+      !! Associations als Vorlagen
+      !!--------------------------
+      !! Beziehungen:
+      !! Text/Symbol > Objekt (Geometrie) > Typ_Gemeinde > Typ_Kanton
+
+      !!ASSOCIATION Basis_Bez_Typ_Kanton_Typ_Gemeinde (ABSTRACT) =
+      !!   Typ_Kanton -- {1} Basis_Typ_Kanton;
+      !!   Typ_Gemeinde -- {0..*} Basis_Typ_Gemeinde;
+      !!MANDATORY CONSTRAINT
+      !!   !! Nutzungsplanung
+      !!   !! Regel Gemeinde-Code enstpricht einem Kantons-Code entsprechend C<bb><kk><gg>
+      !!   isPrefix(Typ_Kanton->Code,Typ_Gemeinde->Code);
+      !!END Basis_Bez_Typ_Kanton_Typ_Gemeinde;
+
+      !!ASSOCIATION Basis_Bez_Typ_Kanton_Objekt (ABSTRACT) =
+      !!   Typ_Kanton -- {1} Basis_Typ_Kanton;
+      !!   Objekt -- Basis_Objekt;
+      !!END Basis_Bez_Typ_Kanton_Objekt;
+
+      !!ASSOCIATION Basis_Bez_Typ_Gemeinde_Objekt (ABSTRACT) =
+      !!   Typ_Gemeinde -- {1} Basis_Typ_Gemeinde;
+      !!   Objekt -- {0..*} Basis_Objekt;
+      !!END Basis_Bez_Typ_Gemeinde_Objekt;
+
+      !!ASSOCIATION Basis_Bez_Objekt_Text (ABSTRACT) =
+      !!   Objekt  -<#> {1} Basis_Objekt;
+      !!   Text -- {0..*} Basis_Objekt_Text;
+      !!END Basis_Bez_Objekt_Text;
+
+      !!ASSOCIATION Basis_Bez_Objekt_Symbol (ABSTRACT) =
+      !!   Objekt  -<#> {1} Basis_Objekt;
+      !!   Symbol -- {0..*} Basis_Objekt_Symbol;
+      !!END Basis_Bez_Objekt_Symbol;
+
+      !! Associations konkret
+      !!---------------------
+      !! Beziehungen:
+      !! Objekt/Typ_Gemeinde/Typ_Kanton > RV_Dokument
+
+      ASSOCIATION Bez_Dokument_Typ_Kanton =
+         Dokument (EXTERNAL) -- {1..*} Grundwasser_ZH_V1.Rechtsvorschriften.RV_Dokument;
+         Typ -- {0..*} Basis_Typ_Kanton;
+      END Bez_Dokument_Typ_Kanton;
+
+      ASSOCIATION Bez_Dokument_Typ_Gemeinde  =
+         Dokument (EXTERNAL) -- {1..*} Grundwasser_ZH_V1.Rechtsvorschriften.RV_Dokument;
+         Typ -- {0..*} Basis_Typ_Gemeinde;
+      END Bez_Dokument_Typ_Gemeinde;
+
+      ASSOCIATION Bez_Dokument_Objekt =
+         Dokument (EXTERNAL) -- {1..*} Grundwasser_ZH_V1.Rechtsvorschriften.RV_Dokument;
+         Objekt -- {0..*} Basis_Objekt;
+      END Bez_Dokument_Objekt;
+
+   END Grundstrukturen;
+
+
+   !! Gewaesserschutzbereiche
+   !!========================
+
+   TOPIC Gewaesserschutzbereiche EXTENDS Grundwasser_ZH_V1.Grundstrukturen =
+      DEPENDS ON Grundwasser_ZH_V1.Rechtsvorschriften;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         
+         !! Codes Kanton
+
+         GSB_Codes = (
+            Ao,
+            Au,
+            Zo,
+            Zu,
+            Ub
+         );
+
+         GSB_RechtsstatusObjekt = (
+            inKraft,
+            laufendeAenderung (
+               Festsetzung,
+               Rechtsmittelverfahren
+            ),   
+            Aufhebung
+         );
+
+         GSB_BehoerdeFestsetzung = (
+            Baudirektion
+         );
+
+         GSB_BehoerdeinKraftsetzung = (
+            Baudirektion,
+            andere
+         );
+
+         GSB_BehoerdeGewalt = (
+            Exekutive
+         );
+
+      !! Classes
+      !!--------
+      CLASS GSB_Typ
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY GSB_Codes;
+         Bezeichnung : MANDATORY TEXT*80;
+         Abkuerzung : TEXT*12;
+         Beschreibung : MTEXT*2400;
+
+      UNIQUE
+         Code;
+
+      END GSB_Typ;
+
+      CLASS GSB_Bereich
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Objekt =
+
+         Rechtsstatus : MANDATORY GSB_RechtsstatusObjekt;
+         Bemerkungen : MTEXT*2400;
+
+         Festsetzung_Behoerde : GSB_BehoerdeFestsetzung;
+         Festsetzung_Behoerde_Gewalt : GSB_BehoerdeGewalt;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde_Auswahl : GSB_BehoerdeinKraftsetzung;
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Behoerde_Gewalt : GSB_BehoerdeGewalt;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         Geometrie : MANDATORY Grundwasser_ZH_V1.ZHSurface;
+
+      MANDATORY CONSTRAINT
+         !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+         !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+         NOT (DEFINED(inKraftsetzung_Behoerde_Auswahl)) AND NOT (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl == #andere)) AND (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl != #andere)) AND (DEFINED(inKraftsetzung_Behoerde) AND (inKraftsetzung_Behoerde == inKraftsetzung_Behoerde_Auswahl));
+
+      MANDATORY CONSTRAINT
+         (Rechtsstatus == #inKraft);
+
+      END GSB_Bereich;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION Bez_GSB_Typ =
+         Typ_Kanton -- {1} GSB_Typ;
+         Objekt -- {0..*} GSB_Bereich;
+      END Bez_GSB_Typ;
+
+
+   END Gewaesserschutzbereiche;
+
+
+   !! Grundwasser
+   !!============
+
+   TOPIC Grundwasserschutz EXTENDS Grundwasser_ZH_V1.Grundstrukturen =
+      DEPENDS ON Grundwasser_ZH_V1.Rechtsvorschriften;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         !! Codes Kanton
+
+         GWS_Areal_Codes = (
+            Areal,
+            ZukuenftigeZoneS2,
+            ZukuenftigeZoneS3
+         );
+
+         GWS_Areal_Codes_ZH = (  !! zukuenftige ZH Codes
+            keine,
+            ZukuenftigeZoneS1
+         );
+
+
+         GWS_Areal_RechtsstatusObjekt = (
+            inKraft,
+            laufendeAenderung (
+               Festsetzung,
+               Rechtsmittelverfahren
+            ),
+            provisorisch,
+            Aufhebung           !! System Implementation  
+         );
+
+         GWS_Areal_BehoerdeFestsetzung = (
+            Baudirektion
+         );
+
+         GWS_Areal_BehoerdeinKraftsetzung = (
+            Baudirektion,
+            andere
+         );
+
+         GWS_Areal_BehoerdeGewalt = (
+            Exekutive
+         );
+
+         GWS_Areal_Bezeichnung_ZH = (
+            Teilareal_A,
+            Teilareal_B,
+            andere
+         );
+
+
+         GWS_Zone_Codes_Kanton = (
+            S1,
+            S2,
+            S3,
+            Spezialzone,         !! z.B. Gemeinde S4
+            S1a,
+            S1b,
+            S1c,
+            S2a,
+            S2b,
+            S2c,
+            S3a,
+            S3b,
+            S3c,
+            S                    !! provisorische Eier
+         );
+
+         GWS_Zone_RechtsstatusObjekt = (
+            inKraft,
+            laufendeAenderung (
+               Vorpruefung,
+               Festsetzung,
+               oeffentliche_Auflage,
+               Genehmigung,
+               Rechtsmittelverfahren
+            ),
+            provisorisch,
+            Aufhebung
+         );
+
+         GWS_Zone_BehoerdeVorpruefung = (
+            Baudirektion
+         );
+
+         GWS_Zone_BehoerdeFestsetzung = (
+            Stadtrat,
+            Gemeinderat
+         );
+
+         GWS_Zone_BehoerdeGenehmigung = (
+            Regierungsrat,
+            Baudirektion,
+            AWEL,
+            andere
+         );
+
+         GWS_Zone_BehoerdeinKraftsetzung = (
+            Regierungsrat,
+            Baudirektion,
+            andere
+         );
+
+         GWS_Zone_BehoerdeGewalt = (
+            Exekutive
+         );
+
+      !! Areale
+      !!-------
+
+      !! Classes
+      !!--------
+      CLASS GWS_Areal_Typ
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY GWS_Areal_Codes;
+         Bezeichnung : MANDATORY TEXT*80;
+         Abkuerzung : TEXT*12;
+         Code_ZH : MANDATORY GWS_Areal_Codes_ZH;
+
+      MANDATORY CONSTRAINT
+         !! wenn Code == #ZukuenftigeZoneS2 -> Code_ZH kann definiert sein (Verschaerfung von ZukuenftigeZoneS2)
+         !! wenn Code != #ZukuenftigeZoneS2 -> Code_ZH=#keine
+         (Code == #ZukuenftigeZoneS2)
+         OR
+         (Code <> #ZukuenftigeZoneS2) AND (Code_ZH == #keine);
+
+      UNIQUE
+         Code,Code_ZH;
+
+      END GWS_Areal_Typ;
+
+      CLASS GWS_Areal
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Objekt =
+
+         Rechtsstatus : MANDATORY GWS_Areal_RechtsstatusObjekt;
+         Bemerkungen : MTEXT*2400;
+
+         Festsetzung_Behoerde : GWS_Areal_BehoerdeFestsetzung;
+         Festsetzung_Behoerde_Gewalt : GWS_Areal_BehoerdeGewalt;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde_Auswahl : GWS_Areal_BehoerdeinKraftsetzung;
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Behoerde_Gewalt : GWS_Areal_BehoerdeGewalt;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         Bezeichnung : TEXT*80;
+
+         Bezeichnung_ZH_Auswahl : GWS_Areal_Bezeichnung_ZH;
+         Bezeichnung_ZH : TEXT*20;
+
+         Geometrie : MANDATORY Grundwasser_ZH_V1.ZHSurface;
+
+      MANDATORY CONSTRAINT
+         !! wenn Bezeichnung_ZH_Auswahl == andere -> Bezeichnung_ZH muss definiert sein
+         !! wenn Bezeichnung_ZH_Auswahl != andere -> Bezeichnung_ZH = Bezeichnung_ZH_Auswahl
+         NOT (DEFINED(Bezeichnung_ZH_Auswahl)) AND NOT (DEFINED(Bezeichnung_ZH))
+         OR
+         (DEFINED(Bezeichnung_ZH_Auswahl) AND (Bezeichnung_ZH_Auswahl == #andere)) AND (DEFINED(Bezeichnung_ZH))
+         OR
+         (DEFINED(Bezeichnung_ZH_Auswahl) AND (Bezeichnung_ZH_Auswahl != #andere)) AND (DEFINED(Bezeichnung_ZH) AND (Bezeichnung_ZH == Bezeichnung_ZH_Auswahl));
+
+      MANDATORY CONSTRAINT
+         !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+         !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+         NOT (DEFINED(inKraftsetzung_Behoerde_Auswahl)) AND NOT (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl == #andere)) AND (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl != #andere)) AND (DEFINED(inKraftsetzung_Behoerde) AND (inKraftsetzung_Behoerde == inKraftsetzung_Behoerde_Auswahl));
+
+      END GWS_Areal;
+
+      CLASS GWS_Areal_Text
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Objekt_Text =
+      END GWS_Areal_Text;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION Bez_GWS_Areal_Typ =
+         Typ_Kanton -- {1} GWS_Areal_Typ;
+         Objekt -- {0..*} GWS_Areal;
+      END Bez_GWS_Areal_Typ;
+
+      ASSOCIATION Bez_GWS_Areal_Text (ABSTRACT) =
+         Objekt  -<#> {1} GWS_Areal;
+         Text -- {0..*} GWS_Areal_Text;
+
+      !! MANDATORY CONSTRAINT
+         !! Text->Text == Objekt->Bezeichnung + ' ' + Objekt->Bezeichnung_ZH;
+
+      END Bez_GWS_Areal_Text;
+
+
+      !! Zone
+      !!-----
+
+      !! Classes
+      !!--------
+      CLASS GWS_Zone_Typ_Kanton
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY GWS_Zone_Codes_Kanton;
+         Bezeichnung : MANDATORY TEXT*80;
+         Abkuerzung : TEXT*12;
+
+      UNIQUE
+         Code;
+
+      END GWS_Zone_Typ_Kanton;
+
+      CLASS GWS_Zone_Typ_Gemeinde
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Typ_Gemeinde =
+
+         Code : MANDATORY TEXT*50;
+         Bezeichnung : MANDATORY TEXT*80;
+
+      UNIQUE
+         BFS_Nummer,Code;
+
+      END GWS_Zone_Typ_Gemeinde;
+
+      CLASS GWS_Zone
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Objekt =
+
+         Rechtsstatus : MANDATORY GWS_Zone_RechtsstatusObjekt;
+         Bemerkungen : MTEXT*2400;
+         Nutzniesser : TEXT*80;
+         Konzession_Ablauf : TEXT*80;
+
+         Vorpruefung_Behoerde : GWS_Zone_BehoerdeVorpruefung;
+         Vorpruefung_Datum : XMLDate;
+         Vorpruefung_Nummer : TEXT*80;
+
+         Festsetzung_Behoerde : GWS_Zone_BehoerdeFestsetzung;
+         Festsetzung_Behoerde_Gewalt : GWS_Zone_BehoerdeGewalt;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         OeffentlicheAuflage_Behoerde : TEXT*80;
+         OeffentlicheAuflage_Datum : XMLDate;
+         OeffentlicheAuflage_Nummer : TEXT*80;
+
+         Genehmigung_Behoerde_Auswahl : GWS_Zone_BehoerdeGenehmigung;
+         Genehmigung_Behoerde : TEXT*80;
+         Genehmigung_Datum : XMLDate;
+         Genehmigung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde_Auswahl : GWS_Zone_BehoerdeinKraftsetzung;
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Behoerde_Gewalt : GWS_Zone_BehoerdeGewalt;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         Grundwasserrechts_Nummer : MANDATORY TEXT*80;
+         Bezeichnung : TEXT*80;
+
+         Geometrie : MANDATORY Grundwasser_ZH_V1.ZHSurface;
+
+      MANDATORY CONSTRAINT
+         !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+         !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+         NOT (DEFINED(Genehmigung_Behoerde_Auswahl)) AND NOT (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl == #andere)) AND (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl != #andere)) AND (DEFINED(Genehmigung_Behoerde) AND (Genehmigung_Behoerde == Genehmigung_Behoerde_Auswahl));
+
+      MANDATORY CONSTRAINT
+         !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+         !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+         NOT (DEFINED(inKraftsetzung_Behoerde_Auswahl)) AND NOT (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl == #andere)) AND (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl != #andere)) AND (DEFINED(inKraftsetzung_Behoerde) AND (inKraftsetzung_Behoerde == inKraftsetzung_Behoerde_Auswahl));
+
+      END GWS_Zone;
+
+      CLASS GWS_Zone_Text
+            EXTENDS Grundwasser_ZH_V1.Grundstrukturen.Basis_Objekt_Text =
+      END GWS_Zone_Text;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION Bez_GWS_Zone_Typ_Kanton_Typ_Gemeinde =
+         Typ_Kanton -- {1} GWS_Zone_Typ_Kanton;
+         Typ_Gemeinde -- {0..*} GWS_Zone_Typ_Gemeinde;
+      END Bez_GWS_Zone_Typ_Kanton_Typ_Gemeinde;
+
+      ASSOCIATION Bez_GWS_Zone_Typ_Gemeinde =
+         Typ_Gemeinde -- {1} GWS_Zone_Typ_Gemeinde;
+         Objekt -- {0..*} GWS_Zone;
+
+      MANDATORY CONSTRAINT
+         !! wenn Typ_Gemeinde->Typ_Kanton->Code == #S -> Objekt->Rechtsstatus == #provisorisch
+         !! wenn Typ_Gemeinde->Typ_Kanton->Code != #S -> Objekt->Rechtsstatus egal
+         (Typ_Gemeinde->Typ_Kanton->Code == #S) AND (Objekt->Rechtsstatus == #provisorisch)
+         OR
+         (Typ_Gemeinde->Typ_Kanton->Code != #S);
+
+      END Bez_GWS_Zone_Typ_Gemeinde;
+
+      ASSOCIATION Bez_GWS_Zone_Text (ABSTRACT) =
+         Objekt  -<#> {1} GWS_Zone;
+         Text -- {0..*} GWS_Zone_Text;
+
+      !! MANDATORY CONSTRAINT
+         !! Text->Text == Objekt->Bezeichnung + ' ' + Objekt->Grundwasserrechts_Nummer + ' ' + Objekt->Typ_Gemeinde->Bezeichnung;
+
+      END Bez_GWS_Zone_Text;
+
+   END Grundwasserschutz;
+
+
+   !! Projekte
+   !!=========
+
+   TOPIC Projekte =
+      DEPENDS ON Grundwasser_ZH_V1.Gewaesserschutzbereiche;
+      DEPENDS ON Grundwasser_ZH_V1.Grundwasserschutz;
+
+
+      CLASS Projekt =
+
+         Nummer : MANDATORY TEXT*80;
+         Bewirtschafter : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY INTERLIS.XMLDate;
+         Projektzustand : RechtsstatusObjekt;
+         DatumLetztePublikation : INTERLIS.XMLDate;
+
+      UNIQUE
+         Nummer;
+
+      END Projekt;
+
+      CLASS Projekt_Perimeter =
+
+         Geometrie : MANDATORY ZHSurface;
+
+      END Projekt_Perimeter;
+
+      CLASS Variante =
+
+         Nummer : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY INTERLIS.XMLDate;
+
+      END Variante;
+
+
+      ASSOCIATION Bez_Projekt_Perimeter =
+
+         ProjektRef -- {1} Projekt;
+         PerimeterRef -<> {0..*}    Projekt_Perimeter;
+
+      END Bez_Projekt_Perimeter;
+
+      ASSOCIATION Bez_Projekt_Variante =
+
+         ProjektRef -- {1} Projekt;
+         VarianteRef -<> {0..*} Variante;
+
+      END Bez_Projekt_Variante;
+
+      ASSOCIATION Ausschluss =
+
+         Variante_A_Ref -- {1..*}    Variante;
+         Variante_B_Ref -- {1..*}    Variante;
+
+      END Ausschluss;
+
+      ASSOCIATION Bez_Projekt_Objekt =
+
+         ObjektProjektRef -- {0..*} Projekt;
+         ObjektVarianteRef -- {0..1} Variante;
+
+         ObjektRef (EXTERNAL) -<> {0..*}   Grundwasser_ZH_V1.Gewaesserschutzbereiche.GSB_Bereich
+                                        OR Grundwasser_ZH_V1.Grundwasserschutz.GWS_Areal
+                                        OR Grundwasser_ZH_V1.Grundwasserschutz.GWS_Zone;
+
+      END Bez_Projekt_Objekt;
+
+   END Projekte;
+
+
+   !! Bearbeitung
+   !!============
+
+   TOPIC Bearbeitung =
+      DEPENDS ON Grundwasser_ZH_V1.Rechtsvorschriften;
+      DEPENDS ON Grundwasser_ZH_V1.Gewaesserschutzbereiche;
+      DEPENDS ON Grundwasser_ZH_V1.Grundwasserschutz;
+
+      !! Bearbeitung
+      !!------------
+      !! Zur Eingrenzung einer Bearbeitung von Objekten über mehrfache Perimeter und der Identifikation über eine Nummer
+
+      CLASS Bearbeitung   =
+         Nummer : MANDATORY TEXT*80; !! Nummer zum suchen Perimeter Vorpruefung,OeffentlicheAuflage, Festsetzung,Genehmigung,inKraftsetzung
+
+      END Bearbeitung;
+
+      CLASS Bearbeitung_Perimeter   =
+         Geometrie : MANDATORY Grundwasser_ZH_V1.ZHSurface;
+      END  Bearbeitung_Perimeter;
+
+      ASSOCIATION Bez_Bearbeitung_Perimeter =
+         Bearbeitung -- {1} Bearbeitung;
+         Perimeter -<> {0..*}    Bearbeitung_Perimeter;
+      END Bez_Bearbeitung_Perimeter;
+
+      ASSOCIATION Bez_Bearbeitung_Objekt =
+         Bearbeitung -- {1} Bearbeitung;
+         Objekt  (EXTERNAL) -<> {0..*}    Grundwasser_ZH_V1.Gewaesserschutzbereiche.GSB_Bereich
+                                       OR Grundwasser_ZH_V1.Grundwasserschutz.GWS_Areal
+                                       OR Grundwasser_ZH_V1.Grundwasserschutz.GWS_Zone;
+      END Bez_Bearbeitung_Objekt;
+
+      ASSOCIATION Bez_Dokument_Bearbeitung =
+         Dokument (EXTERNAL) -- {0..*} Grundwasser_ZH_V1.Rechtsvorschriften.RV_Dokument;
+         Bearbeitung -- {0..*} Bearbeitung;
+      END Bez_Dokument_Bearbeitung;
+
+
+      !! Aenderung
+      !!----------
+      !! Zur Protokollierung der Aenderungen von Objekten
+      !! Namen von der implementierten Datenbank (zum Teil nicht duchgaengig)
+
+      CLASS GW_Aenderung   =
+         Beschlussname : MANDATORY TEXT*80;
+         Beschlussnummer : MANDATORY TEXT*80;
+         Beschlussbehoerde : MANDATORY TEXT*80;
+         Beschlussdatum : MANDATORY TEXT*80;
+         Geschaeftsnummer : TEXT*80;
+      END GW_Aenderung;
+
+      ASSOCIATION Bez_GW_Aenderung_Objekt =
+         Aenderung -- {1..*} GW_Aenderung;
+         Objekt  (EXTERNAL) -<> {0..*}    Grundwasser_ZH_V1.Gewaesserschutzbereiche.GSB_Bereich
+                                       OR Grundwasser_ZH_V1.Grundwasserschutz.GWS_Areal
+                                       OR Grundwasser_ZH_V1.Grundwasserschutz.GWS_Zone;
+      END Bez_GW_Aenderung_Objekt;
+
+      ASSOCIATION Bez_RV_Doku_GW_Aenderung =
+         Dokument (EXTERNAL) -- {0..*} Grundwasser_ZH_V1.Rechtsvorschriften.RV_Dokument;
+         Aenderung -- {0..*} GW_Aenderung;
+      END Bez_RV_Doku_GW_Aenderung;
+
+   END Bearbeitung;
+
+
+   !! Transfer Metadaten
+   !!===================
+
+   TOPIC TransferMetadaten =
+
+      !! Classes
+      !!--------
+
+      CLASS Amt =
+         Name : MANDATORY TEXT*80;
+         AmtImWeb : URI;
+      END Amt;
+
+      CLASS Darstellungsdienst =
+         VerweisWMS : URI;
+         LegendeImWeb : URI;
+      END Darstellungsdienst;
+
+      CLASS Datenbestand =
+         BasketId : TEXT*80;
+         Stand : MANDATORY XMLDate;
+         Lieferdatum : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         weitereMetadaten : URI;
+      END Datenbestand;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION zustaendigeStelleDatenbestand =
+         zustaendigeStelle -- {1} Amt;
+         Datenbestand -<> {0..*} Datenbestand;
+      END zustaendigeStelleDatenbestand;
+
+      ASSOCIATION DarstellungsdienstDatenbestand =
+         Darstellungsdienst -- {1} Darstellungsdienst;
+         Datenbestand -<> {0..*} Datenbestand;
+      END DarstellungsdienstDatenbestand;
+
+   END TransferMetadaten;
+
+END Grundwasser_ZH_V1.

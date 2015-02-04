@@ -1,0 +1,815 @@
+!!===================================================================================== 
+!! Kanton Zuerich 
+!! Baudirektion Kanton Zuerich
+!! Amt für Raumentwicklung
+!! Abteilung Raumplanung
+!! Stampfenbachstrasse 14 / Postfach
+!! 8090 Zuerich
+!!
+!! www.bd.zh.ch
+!!
+!! Geobasisdatensatz Nr. 42-ZH   Gewaesserabstandslinien (Gemeinde)
+!! Geobasisdatensatz Nr. 44-ZH   Kantonale Baulinien (Kanton)
+!! Geobasisdatensatz Nr. 45-ZH   Kommunale Baulinien (Gemeinde)
+!! Geobasisdatensatz Nr. 157     Waldgrenzen in Bauzonen (Kanton)
+!! Geobasisdatensatz Nr. 159     Waldabstandslinien (Gemeinde)
+!!===================================================================================== 
+!! Revision History
+!! 2013.08.26/tg
+!! 2013.09.09/tg
+!! 2013.10.28/ht
+!! 2013.11.28/gb
+!! 2014.04.11/tg Implementierte Modelle Proj/RG zusammenfassen. Kommentare aus IL2.
+!!===================================================================================== 
+!! Bemerkungen:
+!! Das Mastermodell ist das gleichnamige Modell in INTERLIS 2.
+!! Dieses Modell entstand aus dem INTERLIS Modell Export aus dem implementierten 
+!! Datenbank Modell und der Zusammenfassung der Modelle für projektierte und 
+!! rechtsgueltige Daten.
+!! Das implementierte Datenbank Modell entstand aus der Umsetzung 
+!! des gleichnamigen Mastermodelles in INTERLIS 2. 
+!!===================================================================================== 
+
+TRANSFER Abstandslinien_ZH;
+
+!!* @Issuer http://www.bd.zh.ch/models
+!!* @Version 2014-04-11
+
+MODEL Abstandslinien_ZH_V1
+
+  DOMAIN
+
+
+    !! Domains Allgemein
+    !!==================
+
+    ZHPoint = COORD2
+      480000.000 70000.000
+      850000.000 310000.000;
+
+    ZHSurface = SURFACE WITH (STRAIGHTS, ARCS)
+      VERTEX COORD2
+        480000.000 70000.000
+        850000.000 310000.000
+      WITHOUT OVERLAPS > 0.001;
+
+    ZHLine = POLYLINE WITH (STRAIGHTS, ARCS)
+      VERTEX COORD2
+        480000.000 70000.000
+        850000.000 310000.000;
+
+    ZHDirectedLine = POLYLINE WITH (STRAIGHTS, ARCS)
+      VERTEX COORD2
+        480000.000 70000.000
+        850000.000 310000.000;
+
+    ZHBFSNr = [1 .. 9999];
+
+    RechtsstatusObjekt = (
+      inKraft,
+      laufendeAenderung (
+        Vorpruefung,
+        oeffentliche_Auflage,
+        Festsetzung,
+        Genehmigung,
+        sistiert,
+        Rechtsmittelverfahren),
+      Aufhebung (
+        Vorpruefung,
+        oeffentliche_Auflage,
+        Festsetzung,
+        Genehmigung,
+        sistiert,
+        Rechtsmittelverfahren));
+
+    Verbindlichkeit = (
+      Nutzungsplanfestlegung,
+      orientierend,
+      hinweisend,
+      wegleitend);
+
+    JaNein = (
+      ja,
+      nein);
+
+    TextGroesse = (
+      klein,
+      mittel,
+      gross);
+
+    Wirksamkeit = (
+      links,
+      rechts);
+
+    DokumentArt = (
+      Rechtsvorschrift,
+      GesetzlicheGrundlage,
+      Hinweis);
+
+    DokumentRechtsstatus = (
+      inKraft,
+      laufendeAenderung,
+      Aufhebung,
+      provisorisch);
+
+    CHCantonCode = (ZH,BE,LU,UR,SZ,OW,NW,GL,ZG,FR,SO,BS,BL,SH,AR,AI,SG,
+                    GR,AG,TG,TI,VD,VS,NE,GE,JU);
+
+    CHMunicipalityCode = [1..9999];
+
+    URI = TEXT*256;
+
+    BLOB = TEXT*2400;
+
+    UUIDOID = TEXT*36;
+
+    Orientation = GRADS  0.00000 399.99999;
+
+
+    !! Domains Baulinien
+    !!==================
+
+    BL_Codes = (
+      Baulinie (
+        Verkehr,
+        Betriebsanlage,
+        Gewaesser,
+        Versorgung),
+      Ski_Schlittellinie,
+      andere);
+
+    BL_BehoerdeFestsetzung = (
+      Regierungsrat,
+      Baudirektion,
+      Volkswirtschaftsdirektion,
+      Gemeinde_Legislative,
+      Gemeinde_Exekutive,
+      andere);
+
+    BL_BehoerdeGenehmigung = (
+      Regierungsrat,
+      Baudirektion,
+      Volkswirtschaftsdirektion,
+      AFV,
+      TBA,
+      andere);
+
+    BL_BehoerdeinKraftsetzung = (
+      Regierungsrat,
+      Baudirektion,
+      Volkswirtschaftsdirektion,
+      AFV,
+      TBA,
+      andere);
+
+    BL_Zustaendigkeit = (
+      kommunal,
+      kantonal);
+
+    BL_Zweck = (
+      geschlossene_Bauweise,
+      Vertikalbereich,
+      andere);
+
+
+    !! Domains Gewaesserabstandslinien
+    !!================================
+
+    GA_Codes = (
+      Gewaesserabstandslinie);
+
+    GA_Verfahren = (
+      Nutzungsplanung,
+      Gestaltungsplan,
+      Quartierplan);
+
+    GA_BehoerdeFestsetzung = (
+      Gemeinde_Legislative,
+      Exekutive);
+
+    GA_BehoerdeGenehmigung = (
+      Regierungsrat,
+      Baudirektion,
+      Volkswirtschaftsdirektion,
+      andere);
+
+    GA_BehoerdeinKraftsetzung = (
+      Legislative,
+      Exekutive);
+
+
+    !! Domains Waesserabstandslinien
+    !!==============================
+
+    WA_Codes = (
+      Waldabstandslinie);
+
+    WA_Verfahren = (
+      Nutzungsplanung,
+      Gestaltungsplan,
+      Quartierplan);
+
+    WA_BehoerdeFestsetzung = (
+      Gemeinde_Legislative,
+      Exekutive);
+
+    WA_BehoerdeGenehmigung = (
+      Regierungsrat,
+      Baudirektion,
+      Volkswirtschaftsdirektion,
+      andere);
+
+    WA_BehoerdeinKraftsetzung = (
+      Legislative,
+      Exekutive);
+
+
+    !! Domains Waldgrenzen
+    !!====================
+
+    WG_dynamisch_Codes = (
+      dynamisch);
+
+    WG_statisch_Codes = (
+      statisch);
+
+    WG_BehoerdeFestsetzung = (
+      ALN);
+
+    WG_BehoerdeGenehmigung = (
+      Baudirektion,
+      Volkswirtschaftsdirektion,
+      ALN,
+      andere);
+
+    WG_BehoerdeinKraftsetzung = (
+      Regierungsrat,
+      Baudirektion,
+      Volkswirtschaftsdirektion,
+      ALN,
+      andere);
+
+    WG_Punkt_Codes = (
+      dynamisch,
+      statisch);
+
+
+  !! Topic Abstandslinien
+  !!=====================
+
+  TOPIC AL =
+     
+
+    !! Projekte
+    !!=========
+
+    !! Werden nur fuer projektierte Daten benötigt.      
+
+    !! Jede Haupttable fuer projektierte Daten beinhaltet folgende Attribute
+    !!
+    !! ProjektRef : OPTIONAL ->Projekt;  
+    !! VarianteRef : OPTIONAL ->Variante;
+
+    !! Bei projektierte Daten ist das Attribut ProjektRef Mandatory
+
+    !! Jede Haupttable und jede Subtable fuer projektierte Daten beinhaltet 
+    !! folgendes Attribut
+
+    !! RG_GID: OPTIONAL TEXT*17;
+    !!
+    !! Da dieses Modell für projektierte und rechtsgueltige Daten verwendet wird,
+    !! muessen alle Attribute fuer projektierte Daten optional sein.
+
+
+    TABLE Projekt =
+      Nummer : TEXT*80;
+      Bewirtschafter : TEXT*80;
+      Eroeffnungsdatum : DATE;
+      Projektzustand : OPTIONAL RechtsstatusObjekt;
+      DatumLetztePublikation : OPTIONAL DATE;
+    IDENT
+      Nummer;
+    END Projekt;
+
+    TABLE Projekt_Perimeter =
+      ProjektRef : ->Projekt;
+      Geometrie : ZHSurface;
+    NO IDENT
+    END Projekt_Perimeter;
+
+    TABLE Variante =
+      Nummer : TEXT*80;
+      Eroeffnungsdatum : DATE;
+      ProjektRef : ->Projekt;
+    IDENT
+      Nummer,ProjektRef;
+    END Variante;
+
+    TABLE Ausschluss =
+      Variante_A_Ref : ->Variante;
+      Variante_B_Ref : ->Variante;
+    NO IDENT
+    END Ausschluss;
+
+
+    !! Dokumente
+    !!==========
+
+    TABLE RV_Dokument =
+      Art : DokumentArt;
+      Titel : TEXT*80;
+      OffiziellerTitel : OPTIONAL TEXT*2400;
+      Abkuerzung : OPTIONAL TEXT*10;
+      OffizielleNr : TEXT*20;
+      Kanton : OPTIONAL CHCantonCode;
+      Gemeinde : OPTIONAL CHMunicipalityCode;
+      publiziertAb : DATE;
+      Rechtsstatus : DokumentRechtsstatus;
+      TextImWeb : OPTIONAL URI;
+      Dokument : OPTIONAL BLOB;
+      Bemerkungen : OPTIONAL TEXT*2400;
+    NO IDENT
+    END RV_Dokument;
+
+    TABLE RV_HinweisWeitereDokumente =
+      Ursprung : ->RV_Dokument; !! {1}
+      Hinweis : ->RV_Dokument; !! {1}
+    NO IDENT
+    END RV_HinweisWeitereDokumente;
+
+
+    !! Baulinien
+    !!==========
+
+    TABLE BL_Typ =
+      Code : BL_Codes;
+    IDENT
+      Code;
+    END BL_Typ;
+
+    TABLE BL_Linie =
+      BFS_Nummer : ZHBFSNr;
+      Gemeinde_Name : OPTIONAL TEXT*80;
+      Bemerkungen : OPTIONAL TEXT*2400;
+      Identifikator : UUIDOID;
+      Vorpruefung_Behoerde : OPTIONAL TEXT*80;
+      Vorpruefung_Datum : OPTIONAL DATE;
+      Vorpruefung_Nummer : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Behoerde : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Datum : OPTIONAL DATE;
+      OeffentlicheAuflage_Nummer : OPTIONAL TEXT*80;
+      Festsetzung_Behoerde_Auswahl : OPTIONAL BL_BehoerdeFestsetzung;
+      Festsetzung_Behoerde : OPTIONAL TEXT*80;
+      Festsetzung_Datum : OPTIONAL DATE;
+      Festsetzung_Nummer : OPTIONAL TEXT*80;
+      Genehmigung_Behoerde_Auswahl : OPTIONAL BL_BehoerdeGenehmigung;
+      Genehmigung_Behoerde : OPTIONAL TEXT*80;
+      Genehmigung_Datum : OPTIONAL DATE;
+      Genehmigung_Nummer : OPTIONAL TEXT*80;
+      inKraftsetzung_Behoerde_Auswahl : OPTIONAL BL_BehoerdeinKraftsetzung;
+      inKraftsetzung_Behoerde : OPTIONAL TEXT*80;
+      inKraftsetzung_Datum : OPTIONAL DATE;
+      inKraftsetzung_Nummer : OPTIONAL TEXT*80;
+      Rechtsstatus : RechtsstatusObjekt;
+      Zustaendigkeit : BL_Zustaendigkeit;
+      Niveaulinie : OPTIONAL JaNein;
+      Typ : ->BL_Typ; !! {0..*}
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+
+    !! constraints (siehe Mastermodell INTERLIS 2)
+
+    !! wenn Festsetzung_Behoerde_Auswahl == andere -> Festsetzung_Behoerde muss definiert sein
+    !! wenn Festsetzung_Behoerde_Auswahl != andere -> Festsetzung_Behoerde = Festsetzung_Behoerde_Auswahl
+
+    !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+    !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+
+    !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+    !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+      
+    END BL_Linie;
+
+    TABLE BL_Geometrie =
+      Zweck_Auswahl : OPTIONAL BL_Zweck;
+      Zweck : OPTIONAL TEXT*80;
+      Wirksamkeit : OPTIONAL Wirksamkeit;
+      Geometrie : ZHDirectedLine;
+      Linie : ->BL_Linie; !! {0..*}
+      RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+
+    !! constraints (siehe Mastermodell INTERLIS 2)
+
+    !! wenn Zweck_Auswahl == andere -> Zweck muss definiert sein
+    !! wenn Zweck_Auswahl != andere -> Zweck = Zweck_Auswahl
+
+    END BL_Geometrie;
+
+    TABLE BL_Linien_Punkt =
+      BFS_Nummer : ZHBFSNr;
+      Gemeinde_Name : OPTIONAL TEXT*80;
+      Geometrie : ZHPoint;
+      Nummer : OPTIONAL TEXT*12;
+      NumPos : OPTIONAL ZHPoint;
+      NumOri : OPTIONAL Orientation;   !! undefiniert = 100.0 
+      NumHAli : OPTIONAL HALIGNMENT;   !! undefiniert = Left
+      NumVAli : OPTIONAL VALIGNMENT;   !! undefiniert = Bottom
+      Code : OPTIONAL BL_Codes;
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+    END BL_Linien_Punkt;
+
+    TABLE Bez_BL_Dok_Typ =
+      Dokument : ->RV_Dokument; !! {1}
+      Typ : -> BL_Typ;
+    NO IDENT
+    END Bez_BL_Dok_Typ;
+
+    TABLE Bez_BL_Dok_Objekt =
+      Dokument : ->RV_Dokument; !! {1}
+      Objekt : -> BL_Linie;
+      RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_BL_Dok_Objekt;
+
+
+    !! Gewaesserabstandslinien
+    !!========================
+
+    TABLE GA_Typ =
+      Code : GA_Codes;
+      Bemerkungen : OPTIONAL TEXT*2400;
+    IDENT
+      Code;
+    END GA_Typ;
+
+    TABLE GA_Linie =
+      BFS_Nummer : ZHBFSNr;
+      Gemeinde_Name : OPTIONAL TEXT*80;
+      Bemerkungen : OPTIONAL TEXT*2400;
+      Identifikator : UUIDOID;
+      Verfahren: GA_Verfahren;
+      Vorpruefung_Behoerde : OPTIONAL TEXT*80;
+      Vorpruefung_Datum : OPTIONAL DATE;
+      Vorpruefung_Nummer : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Behoerde : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Datum : OPTIONAL DATE;
+      OeffentlicheAuflage_Nummer : OPTIONAL TEXT*80;
+      Festsetzung_Behoerde : OPTIONAL TEXT*80;
+      Festsetzung_Behoerde_Gewalt : OPTIONAL GA_BehoerdeFestsetzung;
+      Festsetzung_Datum : OPTIONAL DATE;
+      Festsetzung_Nummer : OPTIONAL TEXT*80;
+      Genehmigung_Behoerde_Auswahl : OPTIONAL GA_BehoerdeGenehmigung;
+      Genehmigung_Behoerde : OPTIONAL TEXT*80;
+      Genehmigung_Datum : OPTIONAL DATE;
+      Genehmigung_Nummer : OPTIONAL TEXT*80;
+      inKraftsetzung_Behoerde : OPTIONAL TEXT*80;
+      inKraftsetzung_Behoerde_Gewalt : OPTIONAL GA_BehoerdeinKraftsetzung;
+      inKraftsetzung_Datum : OPTIONAL DATE;
+      inKraftsetzung_Nummer : OPTIONAL TEXT*80;
+      Rechtsstatus : RechtsstatusObjekt;
+      Wirksamkeit : OPTIONAL Wirksamkeit;
+      Geometrie : ZHDirectedLine;
+      Typ : ->GA_Typ; !! {0..*}
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+
+    !! constraints (siehe Mastermodell INTERLIS 2)
+
+    !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+    !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+
+    END GA_Linie;
+
+    TABLE GA_Linien_Punkt =
+      BFS_Nummer : ZHBFSNr;
+      Gemeinde_Name : OPTIONAL TEXT*80;
+      Geometrie : ZHPoint;
+      Nummer : OPTIONAL TEXT*12;
+      NumPos : OPTIONAL ZHPoint;
+      NumOri : OPTIONAL Orientation;   !! undefiniert = 100.0 
+      NumHAli : OPTIONAL HALIGNMENT;   !! undefiniert = Left
+      NumVAli : OPTIONAL VALIGNMENT;   !! undefiniert = Bottom
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+    END GA_Linien_Punkt;
+
+    TABLE Bez_GA_Dok_Typ =
+      Dokument : ->RV_Dokument; !! {1}
+      Typ : -> GA_Typ;
+    NO IDENT
+    END Bez_GA_Dok_Typ;
+
+    TABLE Bez_GA_Dok_Objekt =
+      Dokument : ->RV_Dokument; !! {1}
+      Objekt : -> GA_Linie;
+      RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_GA_Dok_Objekt;
+
+
+    !! Waldabstandslinien
+    !!===================
+
+    TABLE WA_Typ =
+      Code : WA_Codes;
+      Bemerkungen : OPTIONAL TEXT*2400;
+    IDENT
+      Code;
+    END WA_Typ;
+
+    TABLE WA_Linie =
+      BFS_Nummer : ZHBFSNr;
+      Gemeinde_Name : OPTIONAL TEXT*80;
+      Bemerkungen : OPTIONAL TEXT*2400;
+      Identifikator : UUIDOID;
+      Verfahren: WA_Verfahren;
+      Vorpruefung_Behoerde : OPTIONAL TEXT*80;
+      Vorpruefung_Datum : OPTIONAL DATE;
+      Vorpruefung_Nummer : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Behoerde : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Datum : OPTIONAL DATE;
+      OeffentlicheAuflage_Nummer : OPTIONAL TEXT*80;
+      Festsetzung_Behoerde : OPTIONAL TEXT*80;
+      Festsetzung_Behoerde_Gewalt : OPTIONAL WA_BehoerdeFestsetzung;
+      Festsetzung_Datum : OPTIONAL DATE;
+      Festsetzung_Nummer : OPTIONAL TEXT*80;
+      Genehmigung_Behoerde_Auswahl : OPTIONAL WA_BehoerdeGenehmigung;
+      Genehmigung_Behoerde : OPTIONAL TEXT*80;
+      Genehmigung_Datum : OPTIONAL DATE;
+      Genehmigung_Nummer : OPTIONAL TEXT*80;
+      inKraftsetzung_Behoerde : OPTIONAL TEXT*80;
+      inKraftsetzung_Behoerde_Gewalt : OPTIONAL WA_BehoerdeinKraftsetzung;
+      inKraftsetzung_Datum : OPTIONAL DATE;
+      inKraftsetzung_Nummer : OPTIONAL TEXT*80;
+      Rechtsstatus : RechtsstatusObjekt;
+      Wirksamkeit : OPTIONAL Wirksamkeit;
+      Geometrie : ZHDirectedLine;
+      Typ : ->WA_Typ; !! {0..*}
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+
+    !! constraints (siehe Mastermodell INTERLIS 2)
+
+    !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+    !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+
+    END WA_Linie;
+
+    TABLE WA_Linien_Punkt =
+      BFS_Nummer : ZHBFSNr;
+      Gemeinde_Name : OPTIONAL TEXT*80;
+      Geometrie : ZHPoint;
+      Nummer : OPTIONAL TEXT*12;
+      NumPos : OPTIONAL ZHPoint;
+      NumOri : OPTIONAL Orientation;   !! undefiniert = 100.0 
+      NumHAli : OPTIONAL HALIGNMENT;   !! undefiniert = Left
+      NumVAli : OPTIONAL VALIGNMENT;   !! undefiniert = Bottom
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+    END WA_Linien_Punkt;
+
+    TABLE Bez_WA_Dok_Typ =
+      Dokument : ->RV_Dokument; !! {1}
+      Typ : -> WA_Typ;
+    NO IDENT
+    END Bez_WA_Dok_Typ;
+
+    TABLE Bez_WA_Dok_Objekt =
+      Dokument : ->RV_Dokument; !! {1}
+      Objekt : -> WA_Linie;
+      RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_WA_Dok_Objekt;
+
+
+    !! Waldgrenzen
+    !!============
+
+    !! Waldgrenzen dynamisch (WaG 10)
+    !!-------------------------------
+
+    TABLE WG_dynamisch_Typ =
+      Code : WG_dynamisch_Codes;
+      Bemerkungen : OPTIONAL TEXT*2400;
+    IDENT
+      Code;
+    END WG_dynamisch_Typ;
+
+    TABLE WG_dynamisch_Linie =
+      Bemerkungen : OPTIONAL TEXT*2400;
+      Identifikator : UUIDOID;
+      Vorpruefung_Behoerde : OPTIONAL TEXT*80;
+      Vorpruefung_Datum : OPTIONAL DATE;
+      Vorpruefung_Nummer : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Behoerde : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Datum : OPTIONAL DATE;
+      OeffentlicheAuflage_Nummer : OPTIONAL TEXT*80;
+      Festsetzung_Behoerde : OPTIONAL WG_BehoerdeFestsetzung;
+      Festsetzung_Datum : OPTIONAL DATE;
+      Festsetzung_Nummer : OPTIONAL TEXT*80;
+      Genehmigung_Behoerde_Auswahl : OPTIONAL WG_BehoerdeGenehmigung;
+      Genehmigung_Behoerde : OPTIONAL TEXT*80;
+      Genehmigung_Datum : OPTIONAL DATE;
+      Genehmigung_Nummer : OPTIONAL TEXT*80;
+      inKraftsetzung_Behoerde_Auswahl : OPTIONAL WG_BehoerdeinKraftsetzung;
+      inKraftsetzung_Behoerde : OPTIONAL TEXT*80;
+      inKraftsetzung_Datum : OPTIONAL DATE;
+      inKraftsetzung_Nummer : OPTIONAL TEXT*80;
+      Rechtsstatus : RechtsstatusObjekt;
+      Wirksamkeit : OPTIONAL Wirksamkeit;
+      Geometrie : ZHDirectedLine;
+      Typ : ->WG_dynamisch_Typ; !! {0..*}
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+
+    !! constraints (siehe Mastermodell INTERLIS 2)
+
+    !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+    !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+
+    !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+    !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+
+    END WG_dynamisch_Linie;
+
+
+    !! Waldgrenzen statisch (WaG 13)
+    !!------------------------------
+
+    TABLE WG_statisch_Typ =
+      Code : WG_statisch_Codes;
+      Bemerkungen : OPTIONAL TEXT*2400;
+      RG_GID: OPTIONAL TEXT*17;
+    IDENT
+      Code;
+    END WG_statisch_Typ;
+
+    TABLE WG_statisch_Linie =
+      Bemerkungen : OPTIONAL TEXT*2400;
+      Identifikator : UUIDOID;
+      Vorpruefung_Behoerde : OPTIONAL TEXT*80;
+      Vorpruefung_Datum : OPTIONAL DATE;
+      Vorpruefung_Nummer : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Behoerde : OPTIONAL TEXT*80;
+      OeffentlicheAuflage_Datum : OPTIONAL DATE;
+      OeffentlicheAuflage_Nummer : OPTIONAL TEXT*80;
+      Festsetzung_Behoerde : OPTIONAL WG_BehoerdeFestsetzung;
+      Festsetzung_Datum : OPTIONAL DATE;
+      Festsetzung_Nummer : OPTIONAL TEXT*80;
+      Genehmigung_Behoerde_Auswahl : OPTIONAL WG_BehoerdeGenehmigung;
+      Genehmigung_Behoerde : OPTIONAL TEXT*80;
+      Genehmigung_Datum : OPTIONAL DATE;
+      Genehmigung_Nummer : OPTIONAL TEXT*80;
+      inKraftsetzung_Behoerde_Auswahl : OPTIONAL WG_BehoerdeinKraftsetzung;
+      inKraftsetzung_Behoerde : OPTIONAL TEXT*80;
+      inKraftsetzung_Datum : OPTIONAL DATE;
+      inKraftsetzung_Nummer : OPTIONAL TEXT*80;
+      Rechtsstatus : RechtsstatusObjekt;
+      Wirksamkeit : OPTIONAL Wirksamkeit;
+      Geometrie : ZHDirectedLine;
+      Typ : ->WG_statisch_Typ; !! {0..*}
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+
+    !! constraints (siehe Mastermodell INTERLIS 2)
+
+    !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+    !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+
+    !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+    !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+
+    END WG_statisch_Linie;
+
+    TABLE WG_Linien_Punkt =
+      BFS_Nummer : ZHBFSNr;
+      Gemeinde_Name : OPTIONAL TEXT*80;
+      Geometrie : ZHPoint;
+      Nummer : OPTIONAL TEXT*12;
+      NumPos : OPTIONAL ZHPoint;
+      NumOri : OPTIONAL Orientation;   !! undefiniert = 100.0 
+      NumHAli : OPTIONAL HALIGNMENT;   !! undefiniert = Left
+      NumVAli : OPTIONAL VALIGNMENT;   !! undefiniert = Bottom
+      Code : OPTIONAL WG_Punkt_Codes;
+      RG_GID: OPTIONAL TEXT*17;
+      ProjektRef : OPTIONAL ->Projekt;
+      VarianteRef : OPTIONAL ->Variante;
+    NO IDENT
+    END WG_Linien_Punkt;
+
+    TABLE Bez_WG_Dok_dynamisch_Typ =
+      Dokument : ->RV_Dokument; !! {1}
+      Typ : -> WG_dynamisch_Typ;
+    NO IDENT
+    END Bez_WG_Dok_dynamisch_Typ;
+
+    TABLE Bez_WG_Dok_dynamisch_Linie =
+      Dokument : ->RV_Dokument; !! {1}
+      Objekt : -> WG_dynamisch_Linie;
+      RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_WG_Dok_dynamisch_Linie;
+
+    TABLE Bez_WG_Dok_statisch_Typ =
+      Dokument : ->RV_Dokument; !! {1}
+      Typ : -> WG_statisch_Typ;
+    NO IDENT
+    END Bez_WG_Dok_statisch_Typ;
+
+    TABLE Bez_WG_Dok_statisch_Linie =
+      Dokument : ->RV_Dokument; !! {1}
+      Objekt : -> WG_statisch_Linie;
+      RG_GID: OPTIONAL TEXT*17;
+    NO IDENT
+    END Bez_WG_Dok_statisch_Linie;
+
+
+    !! Aenderungen
+    !!============
+    !! Zur Protokollierung der Aenderungen von Objekten
+    !! Namen von der implementierten Datenbank (zum Teil nicht duchgaengig)
+
+    TABLE Aenderung =
+      Beschlussname : TEXT*80;
+      Beschlussnummer : TEXT*80;
+      Beschlussbehoerde : TEXT*80;
+      Beschlussdatum : TEXT*80;
+      Geschaeftsnummer : OPTIONAL TEXT*80;
+    NO IDENT
+    END Aenderung;
+
+    TABLE Bez_Aenderung_Objekt =
+      Aenderung : ->Aenderung; !! {1}
+      Objekt_BL_L : OPTIONAL -> BL_Linie;
+      Objekt_GA_L : OPTIONAL -> GA_Linie;
+      Objekt_WA_L : OPTIONAL -> WA_Linie;
+      Objekt_WG_dyn_L : OPTIONAL -> WG_dynamisch_Linie;
+      Objekt_WG_stat_L : OPTIONAL -> WG_statisch_Linie;
+    NO IDENT
+    END Bez_Aenderung_Objekt;
+
+    TABLE Bez_RV_Dok_Aenderung =
+      Dokument : ->RV_Dokument; !! {1}
+      Aenderung : ->Aenderung; !! {1}
+    NO IDENT
+    END Bez_RV_Dok_Aenderung;
+
+  END AL.
+
+
+  !! Topic Transfer Metadaten
+  !!=========================
+
+  TOPIC TransferMetadaten =
+
+    TABLE Darstellungsdienst =
+      VerweisWMS : OPTIONAL URI;
+      LegendeImWeb : OPTIONAL URI;
+    NO IDENT
+    END Darstellungsdienst;
+
+    TABLE Amt =
+      Name : TEXT*80;
+      AmtImWeb : OPTIONAL URI;
+    NO IDENT
+    END Amt;
+
+    TABLE Datenbestand =
+      BasketId : OPTIONAL TEXT*2400;
+      Stand : DATE;
+      Lieferdatum : OPTIONAL DATE;
+      Bemerkungen : OPTIONAL TEXT*2400;
+      weitereMetadaten : OPTIONAL URI;
+      Darstellungsdienst : ->Darstellungsdienst; !! {0..*}
+      zustaendigeStelle : ->Amt; !! {0..*}
+    NO IDENT
+    END Datenbestand;
+
+  END TransferMetadaten.
+
+END Abstandslinien_ZH_V1.
+
+FORMAT FREE;
+
+CODE
+  BLANK = 0x7E, UNDEFINED = DEFAULT, CONTINUE = DEFAULT;
+  TID = ANY;
+END.

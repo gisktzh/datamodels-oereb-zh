@@ -1,0 +1,394 @@
+TRANSFER Grundwasser_ZH;
+
+MODEL Grundwasser_ZH_V1_RG
+
+DOMAIN
+    ZHPoint = COORD2 480000.000 70000.000 850000.000 310000.000;
+    ZHSurface = SURFACE
+        WITH (STRAIGHTS, ARCS)
+        VERTEX COORD2 480000.000 70000.000 850000.000 310000.000
+        WITHOUT OVERLAPS > 0.001;
+    ZHBFSNr = [1 .. 9999];
+    TextGroesse =
+       (klein,
+        mittel,
+        gross);
+    DokumentArt =
+       (Rechtsvorschrift,
+        GesetzlicheGrundlage,
+        Hinweis);
+    DokumentRechtsstatus =
+       (inKraft,
+        laufendeAenderung,
+        Aufhebung,
+        provisorisch);
+    CHCantonCode =
+       (ZH,
+        BE,
+        LU,
+        UR,
+        SZ,
+        OW,
+        NW,
+        GL,
+        ZG,
+        FR,
+        SO,
+        BS,
+        BL,
+        SH,
+        AR,
+        AI,
+        SG,
+        GR,
+        AG,
+        TG,
+        TI,
+        VD,
+        VS,
+        NE,
+        GE,
+        JU);
+    CHMunicipalityCode = [1 .. 9999];
+    URI = TEXT*256;
+    BLOB = TEXT*2400;
+    UUIDOID = TEXT*36;
+    Orientation = GRADS 0.00000 399.99999;
+    GSB_Codes =
+       (Ao,
+        Au,
+        Zo,
+        Zu,
+        Ub);
+    GSB_RechtsstatusObjekt =
+       (inKraft,
+        laufendeAenderung
+           (Festsetzung,
+            Rechtsmittelverfahren),
+        Aufhebung);
+    GSB_BehoerdeFestsetzung =
+       (Baudirektion);
+    GSB_BehoerdeinKraftsetzung =
+       (Baudirektion,
+        andere);
+    GSB_BehoerdeGewalt =
+       (Exekutive);
+    GWS_Areal_Codes =
+       (Areal,
+        ZukuenftigeZoneS2,
+        ZukuenftigeZoneS3);
+    GWS_Areal_Codes_ZH =
+       (keine,
+        ZukuenftigeZoneS1);
+    GWS_Areal_RechtsstatusObjekt =
+       (inKraft,
+        laufendeAenderung
+           (Festsetzung,
+            Rechtsmittelverfahren),
+        provisorisch,
+        Aufhebung);
+    GWS_Areal_BehoerdeFestsetzung =
+       (Baudirektion);
+    GWS_Areal_BehoerdeinKraftsetzung =
+       (Baudirektion,
+        andere);
+    GWS_Areal_BehoerdeGewalt =
+       (Exekutive);
+    GWS_Areal_Bezeichnung_ZH =
+       (Teilareal_A,
+        Teilareal_B,
+        andere);
+    GWS_Zone_Codes_Kanton =
+       (S1,
+        S2,
+        S3,
+        Spezialzone,
+        S1a,
+        S1b,
+        S1c,
+        S2a,
+        S2b,
+        S2c,
+        S3a,
+        S3b,
+        S3c,
+        S);
+    GWS_Zone_RechtsstatusObjekt =
+       (inKraft,
+        laufendeAenderung
+           (Vorpruefung,
+            Festsetzung,
+            oeffentliche_Auflage,
+            Genehmigung,
+            Rechtsmittelverfahren),
+        provisorisch,
+        Aufhebung);
+    GWS_Zone_BehoerdeVorpruefung =
+       (Baudirektion);
+    GWS_Zone_BehoerdeFestsetzung =
+       (Stadtrat,
+        Gemeinderat);
+    GWS_Zone_BehoerdeGenehmigung =
+       (Regierungsrat,
+        Baudirektion,
+        AWEL,
+        andere);
+    GWS_Zone_BehoerdeinKraftsetzung =
+       (Regierungsrat,
+        Baudirektion,
+        andere);
+    GWS_Zone_BehoerdeGewalt =
+       (Exekutive);
+
+TOPIC GW =
+
+    TABLE RV_Dokument = 
+        Art: DokumentArt;
+        Titel: TEXT*80;
+        OffiziellerTitel: OPTIONAL TEXT*2400;
+        Abkuerzung: OPTIONAL TEXT*10;
+        OffizielleNr: TEXT*20;
+        Kanton: OPTIONAL CHCantonCode;
+        Gemeinde: OPTIONAL CHMunicipalityCode;
+        publiziertAb: DATE;
+        Rechtsstatus: DokumentRechtsstatus;
+        TextImWeb: OPTIONAL URI;
+        Dokument: OPTIONAL BLOB;
+        Bemerkungen: OPTIONAL TEXT*2400;
+    NO IDENT
+    END RV_Dokument;
+
+    TABLE RV_HinweisWeitereDokumente = 
+        Ursprung: -> RV_Dokument;
+        Hinweis: -> RV_Dokument;
+    NO IDENT
+    END RV_HinweisWeitereDokumente;
+
+    TABLE GSB_Typ = 
+        Code: GSB_Codes;
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Beschreibung: OPTIONAL TEXT*2400;
+    IDENT
+        Code;
+    END GSB_Typ;
+
+    TABLE GSB_Bereich = 
+        Rechtsstatus: GSB_RechtsstatusObjekt;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Festsetzung_Behoerde: OPTIONAL GSB_BehoerdeFestsetzung;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL GSB_BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Auswahl: OPTIONAL GSB_BehoerdeinKraftsetzung;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL GSB_BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Typ_Kanton: -> GSB_Typ;
+        Geometrie: ZHSurface;
+    NO IDENT
+    END GSB_Bereich;
+
+    TABLE Bez_RV_Doku_GSB_Typ = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> GSB_Typ;
+    NO IDENT
+    END Bez_RV_Doku_GSB_Typ;
+
+    TABLE Bez_RV_Doku_GSB_Objekt = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> GSB_Bereich;
+    NO IDENT
+    END Bez_RV_Doku_GSB_Objekt;
+
+    TABLE GWS_Areal_Typ = 
+        Code: GWS_Areal_Codes;
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+        Code_ZH: GWS_Areal_Codes_ZH;
+    IDENT
+        Code, Code_ZH;
+    END GWS_Areal_Typ;
+
+    TABLE GWS_Areal = 
+        Rechtsstatus: GWS_Areal_RechtsstatusObjekt;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Festsetzung_Behoerde: OPTIONAL GWS_Areal_BehoerdeFestsetzung;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL GWS_Areal_BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Auswahl: OPTIONAL GWS_Areal_BehoerdeinKraftsetzung;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL GWS_Areal_BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Bezeichnung: OPTIONAL TEXT*80;
+        Bezeichnung_ZH_Auswahl: OPTIONAL GWS_Areal_Bezeichnung_ZH;
+        Bezeichnung_ZH: OPTIONAL TEXT*20;
+        Typ_Kanton: -> GWS_Areal_Typ;
+        Geometrie: ZHSurface;
+    NO IDENT
+    END GWS_Areal;
+
+    TABLE GWS_Areal_Text = 
+        Text: TEXT*80;
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        HAli: OPTIONAL HALIGNMENT;
+        VAli: OPTIONAL VALIGNMENT;
+        Groesse: OPTIONAL TextGroesse;
+        Objekt: -> GWS_Areal;
+    NO IDENT
+    END GWS_Areal_Text;
+
+    TABLE GWS_Zone_Typ_Kanton = 
+        Code: GWS_Zone_Codes_Kanton;
+        Bezeichnung: TEXT*80;
+        Abkuerzung: OPTIONAL TEXT*12;
+    IDENT
+        Code;
+    END GWS_Zone_Typ_Kanton;
+
+    TABLE GWS_Zone_Typ_Gemeinde = 
+        BFS_Nummer: ZHBFSNr;
+        Gemeinde_Name: OPTIONAL TEXT*80;
+        Code: TEXT*50;
+        Bezeichnung: TEXT*80;
+        Typ_Kanton: -> GWS_Zone_Typ_Kanton;
+    IDENT
+        BFS_Nummer, Code;
+    END GWS_Zone_Typ_Gemeinde;
+
+    TABLE GWS_Zone = 
+        Rechtsstatus: GWS_Zone_RechtsstatusObjekt;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        Nutzniesser: OPTIONAL TEXT*80;
+        Vorpruefung_Behoerde: OPTIONAL GWS_Zone_BehoerdeVorpruefung;
+        Vorpruefung_Datum: OPTIONAL DATE;
+        Vorpruefung_Nummer: OPTIONAL TEXT*80;
+        Festsetzung_Behoerde: OPTIONAL GWS_Zone_BehoerdeFestsetzung;
+        Festsetzung_Behoerde_Gewalt: OPTIONAL GWS_Zone_BehoerdeGewalt;
+        Festsetzung_Datum: OPTIONAL DATE;
+        Festsetzung_Nummer: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde: OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum: OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer: OPTIONAL TEXT*80;
+        Genehmigung_Behoerde_Auswahl: OPTIONAL GWS_Zone_BehoerdeGenehmigung;
+        Genehmigung_Behoerde: OPTIONAL TEXT*80;
+        Genehmigung_Datum: OPTIONAL DATE;
+        Genehmigung_Nummer: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Auswahl: OPTIONAL GWS_Zone_BehoerdeinKraftsetzung;
+        inKraftsetzung_Behoerde: OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde_Gewalt: OPTIONAL GWS_Zone_BehoerdeGewalt;
+        inKraftsetzung_Datum: OPTIONAL DATE;
+        inKraftsetzung_Nummer: OPTIONAL TEXT*80;
+        Grundwasserrechts_Nummer: TEXT*80;
+        Bezeichnung: OPTIONAL TEXT*80;
+        Typ_Gemeinde: -> GWS_Zone_Typ_Gemeinde;
+        Geometrie: ZHSurface;
+        Konzession_Ablauf: OPTIONAL TEXT*80;
+    NO IDENT
+    END GWS_Zone;
+
+    TABLE GWS_Zone_Text = 
+        Text: TEXT*80;
+        Geometrie: ZHPoint;
+        Ori: OPTIONAL Orientation;
+        HAli: OPTIONAL HALIGNMENT;
+        VAli: OPTIONAL VALIGNMENT;
+        Groesse: OPTIONAL TextGroesse;
+        Objekt: -> GWS_Zone;
+    NO IDENT
+    END GWS_Zone_Text;
+
+    TABLE Bez_RV_Doku_GWS_Areal_Typ = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> GWS_Areal_Typ;
+    NO IDENT
+    END Bez_RV_Doku_GWS_Areal_Typ;
+
+    TABLE Bez_RV_Doku_GWS_Areal = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> GWS_Areal;
+    NO IDENT
+    END Bez_RV_Doku_GWS_Areal;
+
+    TABLE Bez_RV_Doku_GWS_ZTyp_Kanton = 
+        Dokument: -> RV_Dokument;
+        Typ_Kanton: -> GWS_Zone_Typ_Kanton;
+    NO IDENT
+    END Bez_RV_Doku_GWS_ZTyp_Kanton;
+
+    TABLE Bez_RV_Doku_GWS_ZTyp_Gemeinde = 
+        Dokument: -> RV_Dokument;
+        Typ_Gemeinde: -> GWS_Zone_Typ_Gemeinde;
+    NO IDENT
+    END Bez_RV_Doku_GWS_ZTyp_Gemeinde;
+
+    TABLE Bez_RV_Doku_GWS_Zone = 
+        Dokument: -> RV_Dokument;
+        Objekt: -> GWS_Zone;
+    NO IDENT
+    END Bez_RV_Doku_GWS_Zone;
+
+    TABLE GW_Aenderung = 
+        Beschlussname: TEXT*80;
+        Beschlussnummer: TEXT*80;
+        Beschlussbehoerde: TEXT*80;
+        Beschlussdatum: TEXT*80;
+        Geschaeftsnummer: OPTIONAL TEXT*80;
+    NO IDENT
+    END GW_Aenderung;
+
+    TABLE Bez_GW_Aenderung_Objekt = 
+        Aenderung: -> GW_Aenderung;
+        Objekt_GSB_B: OPTIONAL -> GSB_Bereich;
+        Objekt_GWS_A: OPTIONAL -> GWS_Areal;
+        Objekt_GWS_Z: OPTIONAL -> GWS_Zone;
+    NO IDENT
+    END Bez_GW_Aenderung_Objekt;
+
+    TABLE Bez_RV_Doku_GW_Aenderung = 
+        Dokument: -> RV_Dokument;
+        Aenderung: -> GW_Aenderung;
+    NO IDENT
+    END Bez_RV_Doku_GW_Aenderung;
+
+END GW.
+
+TOPIC TransferMetadaten =
+
+    TABLE Darstellungsdienst = 
+        VerweisWMS: OPTIONAL URI;
+        LegendeImWeb: OPTIONAL URI;
+    NO IDENT
+    END Darstellungsdienst;
+
+    TABLE Amt = 
+        Name: TEXT*80;
+        AmtImWeb: OPTIONAL URI;
+    NO IDENT
+    END Amt;
+
+    TABLE Datenbestand = 
+        BasketId: OPTIONAL TEXT*2400;
+        Stand: DATE;
+        Lieferdatum: OPTIONAL DATE;
+        Bemerkungen: OPTIONAL TEXT*2400;
+        weitereMetadaten: OPTIONAL URI;
+        zustaendigeStelle: -> Amt;
+        Darstellungsdienst: -> Darstellungsdienst;
+    NO IDENT
+    END Datenbestand;
+
+END TransferMetadaten.
+
+END Grundwasser_ZH_V1_RG.
+
+FORMAT FREE;
+
+CODE
+    BLANK = 0x7e, UNDEFINED = DEFAULT, CONTINUE = DEFAULT;
+    TID = ANY;
+END.
