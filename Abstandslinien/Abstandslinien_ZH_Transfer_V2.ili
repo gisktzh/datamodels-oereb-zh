@@ -897,6 +897,8 @@ MODEL Abstandslinien_ZH_V2
     !!--------------------
 
     TABLE WG_dynamisch_Linie =
+      BFS_Nummer : CHMunicipalityCode;
+      Gemeinde_Name : OPTIONAL TEXT*80;
       Bemerkungen : OPTIONAL TEXT*2400;
       Identifikator : OPTIONAL UUIDOID;
       Vorpruefung_Behoerde : OPTIONAL TEXT*80;
@@ -949,6 +951,7 @@ MODEL Abstandslinien_ZH_V2
 
     TABLE WG_dynamisch_Linie_PROJ =
       BFS_Nummer : CHMunicipalityCode;
+      Gemeinde_Name : OPTIONAL TEXT*80;
       Bemerkungen : OPTIONAL TEXT*2400;
       Identifikator : OPTIONAL UUIDOID;
       Vorpruefung_Behoerde : OPTIONAL TEXT*80;
@@ -1017,6 +1020,7 @@ MODEL Abstandslinien_ZH_V2
 
     TABLE WG_statisch_Linie =
       BFS_Nummer : CHMunicipalityCode;
+      Gemeinde_Name : OPTIONAL TEXT*80;
       Bemerkungen : OPTIONAL TEXT*2400;
       Identifikator : OPTIONAL UUIDOID;
       Vorpruefung_Behoerde : OPTIONAL TEXT*80;
@@ -1069,6 +1073,7 @@ MODEL Abstandslinien_ZH_V2
 
     TABLE WG_statisch_Linie_PROJ =
       BFS_Nummer : CHMunicipalityCode;
+      Gemeinde_Name : OPTIONAL TEXT*80;
       Bemerkungen : OPTIONAL TEXT*2400;
       Identifikator : OPTIONAL UUIDOID;
       Vorpruefung_Behoerde : OPTIONAL TEXT*80;
