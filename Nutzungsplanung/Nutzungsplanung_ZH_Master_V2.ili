@@ -19,13 +19,14 @@ INTERLIS 2.3;
 !! 2013.11.01/ht
 !! 2014.04.11/tg Anpassungen fuer implementiertes INTERLIS 1 Modell
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2015.08.20/tg Korrektur DEPENDS ON Nutzungsplanung_ZH_V2.Verwaltung
 !!===================================================================================== 
 
 !!@ technicalContact = are@bd.zh.ch
 !!@ furtherInformation = http://www.bd.zh.ch
 !!@ IDGeoIV = "73,145"
 
-CONTRACTED MODEL Nutzungsplanung_ZH_V2 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07-31"  =
+CONTRACTED MODEL Nutzungsplanung_ZH_V2 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-08-20"  =
 
    IMPORTS UNQUALIFIED INTERLIS;
    IMPORTS UNQUALIFIED Units;
@@ -350,6 +351,7 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V2 (de) AT "http://www.bd.zh.ch/models" VERS
 
    TOPIC Grundnutzung EXTENDS Nutzungsplanung_ZH_V2.Grundstrukturen =
       DEPENDS ON Nutzungsplanung_ZH_V2.Rechtsvorschriften;
+      DEPENDS ON Nutzungsplanung_ZH_V2.Verwaltung;
 
       !! Domains
       !!--------
@@ -544,6 +546,7 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V2 (de) AT "http://www.bd.zh.ch/models" VERS
 
    TOPIC Ueberlagerung EXTENDS Nutzungsplanung_ZH_V2.Grundstrukturen =
       DEPENDS ON Nutzungsplanung_ZH_V2.Rechtsvorschriften;
+      DEPENDS ON Nutzungsplanung_ZH_V2.Verwaltung;
 
       !! Domains
       !!--------
@@ -958,6 +961,7 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V2 (de) AT "http://www.bd.zh.ch/models" VERS
 
    TOPIC Laermempfindlichkeit  EXTENDS Nutzungsplanung_ZH_V2.Grundstrukturen =
       DEPENDS ON Nutzungsplanung_ZH_V2.Rechtsvorschriften;
+      DEPENDS ON Nutzungsplanung_ZH_V2.Verwaltung;
 
       DOMAIN
 
