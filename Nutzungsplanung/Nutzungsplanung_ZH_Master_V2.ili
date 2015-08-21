@@ -1004,7 +1004,8 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V2 (de) AT "http://www.bd.zh.ch/models" VERS
 
       END LS_Typ;
 
-      CLASS LS_Festlegung =
+      CLASS LS_Festlegung
+            EXTENDS Nutzungsplanung_ZH_V2.Grundstrukturen.Basis_Objekt =
 
          publiziertAb : MANDATORY XMLDate;
          Bemerkungen : MTEXT*2400;
