@@ -33,6 +33,7 @@
 !!               Aufzählwert Behoerde neu mit Abkürzungen (RR,BD,VD....
 !!               GWS_Zone_Text und GWS_Zone_Text_PROJ Typ von Rechtsstatus an GWS_Zone angepasst
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -297,6 +298,7 @@ MODEL Grundwasser_ZH_V2
     !! Tables beinhalten rechtsgueltige und projektierte Dokumente
 
     TABLE RV_Dokument =
+      DocId: [0..999999];
       Art : DokumentArt;
       Titel : TEXT*80;
       OffiziellerTitel : OPTIONAL TEXT*2400;

@@ -26,6 +26,7 @@
 !!               LS_Festlegung: Attribute Vorpruefung.. inKraftsetzung gelöscht
 !!               BE_Aenderung, Bez_RV_Doku_BE_Aenderung und Bez_RV_Doku_BE_Aenderung_Objekt gelöscht
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -401,6 +402,7 @@ MODEL Nutzungsplanung_ZH_V2
     !! Tables beinhalten rechtsgueltige und projektierte Dokumente
 
     TABLE RV_Dokument =
+      DocId: [0..999999];
       Art : DokumentArt;
       Titel : TEXT*80;
       OffiziellerTitel : OPTIONAL TEXT*2400;

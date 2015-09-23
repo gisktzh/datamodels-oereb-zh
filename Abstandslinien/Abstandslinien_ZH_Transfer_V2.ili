@@ -32,6 +32,7 @@
 !!               Definition von Verbindlichkeit entfernt da sie nicht verwendet wurde
 !!               Aufzählwert Behoerde neu mit Abkürzungen (RR,BD,VD...
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -331,6 +332,7 @@ MODEL Abstandslinien_ZH_V2
     !! Tables beinhalten rechtsgueltige und projektierte Dokumente
 
     TABLE RV_Dokument =
+      DocId: [0..999999];
       Art : DokumentArt;
       Titel : TEXT*80;
       OffiziellerTitel : OPTIONAL TEXT*2400;
