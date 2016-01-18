@@ -18,15 +18,16 @@
 !! 2014.04.11/tg Implementierte Modelle Proj/RG zusammenfassen. Kommentare aus IL2.
 !! 2014.07.31/tg Rechtsgueltige und projektierte Daten in separate Tables.
 !! 2014.09.12/tg Diverse Anpassungen gemaess Feedback 28.08.2014-11.09.2014 
-!! 2014.09.15/ht GID in RG_GID geändert
+!! 2014.09.15/ht GID in RG_GID geÃ¤ndert
 !! 2015.05.03/ht Identifikator neu OPTIONAL in allen Tabellen
 !!               RV_Dokument: OffizielleNr neu OPTIONAL 
-!!               Aufzählwert Behoerde neu mit Abkürzungen (RR,BD,VD,andere);
-!!               UL_Bereich: Attribut eingefügt. Herkunft: UL_Bereich_Herkunft;
-!!               LS_Festlegung: Attribute Vorpruefung.. inKraftsetzung gelöscht
-!!               BE_Aenderung, Bez_RV_Doku_BE_Aenderung und Bez_RV_Doku_BE_Aenderung_Objekt gelöscht
+!!               AufzÃ¤hlwert Behoerde neu mit AbkÃ¼rzungen (RR,BD,VD,andere);
+!!               UL_Bereich: Attribut eingefÃ¼gt. Herkunft: UL_Bereich_Herkunft;
+!!               LS_Festlegung: Attribute Vorpruefung.. inKraftsetzung gelÃ¶scht
+!!               BE_Aenderung, Bez_RV_Doku_BE_Aenderung und Bez_RV_Doku_BE_Aenderung_Objekt gelÃ¶scht
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
-!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
+!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefÃ¼gt.
+!! 2016.01.18/ns LV95
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -34,7 +35,7 @@
 !!
 !! Das Mastermodell ist das gleichnamige Modell in INTERLIS 2.
 !! Dieses INTERLIS-Modell entstand aus dem INTERLIS-Modell-Export aus den implementierten 
-!! Datenbank-Modellen für rechtsgueltige und projektierte Daten und der Zusammenfassung 
+!! Datenbank-Modellen fÃ¼r rechtsgueltige und projektierte Daten und der Zusammenfassung 
 !! dieser exportierten INTERLIS-Modelle in ein INTERLIS-Modell.
 !! Die implementierten Datenbank-Modelle enstanden aus der Umsetzung 
 !! des gleichnamigen Mastermodelles in INTERLIS 2. 
@@ -44,18 +45,18 @@
 !! Projekte - Varianten - Ausschluss werden fuer projektierte Daten benoetigt.      
 !! Die INTERLIS-Modellierung entspricht dem implementierten Datenbank-Modell.
 !! Alle Tabellen fuer die rechtsgueltigen Daten haben eine entsprechende Tabelle
-!! für die projektierten Daten. Die Tabellen für rechtsgueltige und projektierte Daten
+!! fÃ¼r die projektierten Daten. Die Tabellen fÃ¼r rechtsgueltige und projektierte Daten
 !! sind weitgehend identisch.
 !!
-!! Zusätzlich beinhaltet jede Haupttabelle und Untertabelle der rechtsgueltigen Daten folgendes Attribut.
+!! ZusÃ¤tzlich beinhaltet jede Haupttabelle und Untertabelle der rechtsgueltigen Daten folgendes Attribut.
 !!    GID: OPTIONAL GIDTYPE;
 !!
-!! Zusätzlich beinhaltet jede Haupttabelle und Untertabelle der projektierten Daten folgendes Attribut.
+!! ZusÃ¤tzlich beinhaltet jede Haupttabelle und Untertabelle der projektierten Daten folgendes Attribut.
 !!    RG_GID: OPTIONAL GIDTYPE;
 !! RG_GID des projektierten Objektes verweist auf das RD_GID des rechtsgueltigen Objektes.
 !! RG_GID ist der Systemschluessel des Datenhaltungsystemes des Kantons.
 !!
-!! Zusätzlich beinhaltet jede Haupttabelle der projektierten Daten folgende Attribute.
+!! ZusÃ¤tzlich beinhaltet jede Haupttabelle der projektierten Daten folgende Attribute.
 !!    ProjektRef : -> Projekt;  
 !!    VarianteRef : OPTIONAL -> Variante;
 !! 
@@ -65,9 +66,9 @@
 TRANSFER Nutzungsplanung_ZH;
 
 !!* @Issuer http://oereb.zh.ch
-!!* @Version 2015-07-31
+!!* @Version 2016-01-18
 
-MODEL Nutzungsplanung_ZH_V2
+MODEL Nutzungsplanung_ZH_V2_LV95
 
   DOMAIN
 
@@ -76,31 +77,31 @@ MODEL Nutzungsplanung_ZH_V2
     !!==================
 
     ZHPoint = COORD2
-      480000.000 70000.000
-      850000.000 310000.000;
+      2480000.000 1070000.000
+      2850000.000 1310000.000;
 
     ZHLine = POLYLINE WITH (STRAIGHTS, ARCS)
       VERTEX COORD2
-        480000.000 70000.000
-        850000.000 310000.000;
+        2480000.000 1070000.000
+        2850000.000 1310000.000;
 
     ZHDirectedLine = POLYLINE WITH (STRAIGHTS, ARCS)
       VERTEX COORD2
-        480000.000 70000.000
-        850000.000 310000.000;
+        2480000.000 1070000.000
+        2850000.000 1310000.000;
 
     ZHSurface = SURFACE WITH (STRAIGHTS, ARCS)
       VERTEX COORD2
-        480000.000 70000.000
-        850000.000 310000.000
+        2480000.000 1070000.000
+        2850000.000 1310000.000
       WITHOUT OVERLAPS > 0.001;
 
     ZHArea = AREA
         WITH (STRAIGHTS, ARCS)
-        VERTEX COORD2 480000.000 70000.000 850000.000 310000.000
+        VERTEX COORD2 2480000.000 1070000.000 2850000.000 1310000.000
         WITHOUT OVERLAPS > 0.001;
 
-    RechtsstatusObjekt = 
+    RechtsstatusObjekt =
        (inKraft,
         laufendeAenderung
            (Vorpruefung,
@@ -118,37 +119,37 @@ MODEL Nutzungsplanung_ZH_V2
             Rechtsmittelverfahren),
         provisorisch);
 
-    Verbindlichkeit = 
+    Verbindlichkeit =
        (Nutzungsplanfestlegung,
         orientierend,
         hinweisend,
         wegleitend);
 
-    Behoerde = 
+    Behoerde =
        (RR,
         BD,
         VD,
         andere);
 
-    BehoerdeGewalt = 
+    BehoerdeGewalt =
        (Legislative,
         Exekutive);
 
-    JaNein = 
+    JaNein =
        (ja,
         nein);
 
-    TextGroesse = 
+    TextGroesse =
        (klein,
         mittel,
         gross);
 
-    DokumentArt = 
+    DokumentArt =
        (Rechtsvorschrift,
         GesetzlicheGrundlage,
         Hinweis);
 
-    DokumentRechtsstatus = 
+    DokumentRechtsstatus =
        (inKraft,
         laufendeAenderung,
         Aufhebung,
@@ -194,7 +195,7 @@ MODEL Nutzungsplanung_ZH_V2
 
     Firsthoehe = [0.0 .. 9.9];
 
-    GN_Codes_Bund = 
+    GN_Codes_Bund =
        (C11,
         C12,
         C13,
@@ -217,7 +218,7 @@ MODEL Nutzungsplanung_ZH_V2
         C44,
         C49);
 
-    GN_Codes_Kanton = 
+    GN_Codes_Kanton =
        (C1101,
         C1102,
         C1103,
@@ -246,12 +247,12 @@ MODEL Nutzungsplanung_ZH_V2
     !! Domains Ueberlagerung
     !!======================
 
-    Gestaltungsplanart = 
+    Gestaltungsplanart =
        (oeffentlich,
         privat,
         oeffentlich_oder_privat);
 
-    UL_Codes_Flaechen_Bund = 
+    UL_Codes_Flaechen_Bund =
        (C51,
         C52,
         C53,
@@ -261,7 +262,7 @@ MODEL Nutzungsplanung_ZH_V2
         C63,
         C69);
 
-    UL_Codes_Flaechen_Kanton = 
+    UL_Codes_Flaechen_Kanton =
        (C6101,
         C6102,
         C6103,
@@ -274,7 +275,7 @@ MODEL Nutzungsplanung_ZH_V2
         C6906,
         C6907);
 
-    UL_Codes_Flaechen_Gemeinde = 
+    UL_Codes_Flaechen_Gemeinde =
        (C610101,
         C610102,
         C610201,
@@ -295,52 +296,52 @@ MODEL Nutzungsplanung_ZH_V2
         C690707,
         C6907xx);
 
-    UL_Codes_Linien_Bund = 
+    UL_Codes_Linien_Bund =
        (C71,
         C79);
 
-    UL_Codes_Linien_Kanton = 
+    UL_Codes_Linien_Kanton =
        (C7901);
 
-    UL_Codes_Linien_Gemeinde = 
+    UL_Codes_Linien_Gemeinde =
        (C790101,
         C7901xx);
 
-    UL_Codes_Punkte_Bund = 
+    UL_Codes_Punkte_Bund =
        (C81,
         C82,
         C89);
 
-    UL_Codes_Punkte_Kanton = 
+    UL_Codes_Punkte_Kanton =
        (C8901);
 
-    UL_Codes_Punkte_Gemeinde = 
+    UL_Codes_Punkte_Gemeinde =
        (C890101,
         C8901xx);
 
-    UL_Wirksamkeit = 
+    UL_Wirksamkeit =
        (links,
         rechts,
         beidseits);
 
-    UL_Bereich_Herkunft = 
+    UL_Bereich_Herkunft =
        (Aufnahme,
         Uebernahme_Koordinaten,
         Planabgriff,
         Konstruktion,
         andere);
 
-    !! Domains Laermempfindlichkeit 
+    !! Domains Laermempfindlichkeit
     !!=============================
 
-    LS_Codes = 
+    LS_Codes =
        (Keine_ES,
         ES_I,
         ES_II,
         ES_III,
         ES_IV);
 
-    LS_Festlegungstyp = 
+    LS_Festlegungstyp =
        (Rahmennutzungsplanung
            (Allgemein,
             MaessigStoerendesGewerbeZulaessig,
@@ -354,12 +355,12 @@ MODEL Nutzungsplanung_ZH_V2
    !! FUNCTION isPrefix(Prefix: TEXT; Value: TEXT): BOOLEAN;
    !! Kontrolliert ob der Kanton Code C<bb><kk> der Prefix ist vom Gemeinde Code C<bb><kk><gg>
    !! Eine Implementation des Modelles in einem System
-   !! soll diese Abhängigkeit auf ähnliche Art überprüfen
+   !! soll diese AbhÃ¤ngigkeit auf Ã¤hnliche Art Ã¼berprÃ¼fen
 
 
   !! Topic Nutzungsplanung
   !!======================
- 
+
   TOPIC NP =
 
     !! Projekte
@@ -425,7 +426,7 @@ MODEL Nutzungsplanung_ZH_V2
     NO IDENT
     END RV_HinweisWeitereDokumente;
 
-    TABLE Gemeinde = 
+    TABLE Gemeinde =
         BFS_Nummer: CHMunicipalityCode;
         Gemeinde_Name: TEXT*80;
         Thema: (GN_Zonenflaeche, UL_Punkt, UL_Linie, UL_Flaeche, LS_Festlegung);
@@ -433,7 +434,7 @@ MODEL Nutzungsplanung_ZH_V2
         BFS_Nummer,Thema;
     END Gemeinde;
 
-    TABLE Bez_RV_Doku_Gemeinde = 
+    TABLE Bez_RV_Doku_Gemeinde =
         Dokument: -> RV_Dokument;
         Gemeinde: -> Gemeinde;
         RG_GID: OPTIONAL GIDTYPE;
@@ -723,7 +724,7 @@ MODEL Nutzungsplanung_ZH_V2
 
     !! Flaeche rechtsgueltig
     !!----------------------
-     
+
     TABLE UL_Flaeche =
         publiziertAb: DATE;
         Bemerkungen: OPTIONAL TEXT*2400;
@@ -777,7 +778,7 @@ MODEL Nutzungsplanung_ZH_V2
 
     !! constraints (siehe Mastermodell INTERLIS 2)
 
-    !! UL_Bereich nur für bestimmte UL_Flaeche
+    !! UL_Bereich nur f?r bestimmte UL_Flaeche
     !! (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610101)
     !! OR
     !! (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610102)
@@ -828,7 +829,7 @@ MODEL Nutzungsplanung_ZH_V2
 
     !! Flaeche projektiert
     !!--------------------
-     
+
     TABLE UL_Flaeche_PROJ =
         publiziertAb: DATE;
         Bemerkungen: OPTIONAL TEXT*2400;
@@ -913,7 +914,7 @@ MODEL Nutzungsplanung_ZH_V2
 
     !! Linie Typ
     !!----------
-     
+
     TABLE UL_Linie_Typ_Kanton =
         Bezeichnung: TEXT*80;
         Abkuerzung: OPTIONAL TEXT*12;
@@ -1281,7 +1282,7 @@ MODEL Nutzungsplanung_ZH_V2
     !!=====================
 
     !! Typ
-    !!----  
+    !!----
 
     TABLE LS_Typ =
         Bezeichnung: TEXT*80;
@@ -1378,7 +1379,7 @@ MODEL Nutzungsplanung_ZH_V2
 
 
         RG_GID: OPTIONAL GIDTYPE;
-		Gemeinde: -> Gemeinde;
+        Gemeinde: -> Gemeinde;
         ProjektRef: -> Projekt;
         VarianteRef: OPTIONAL -> Variante;
     NO IDENT
@@ -1453,7 +1454,7 @@ MODEL Nutzungsplanung_ZH_V2
   END TransferMetadaten.
 
 
-END Nutzungsplanung_ZH_V2.
+END Nutzungsplanung_ZH_V2_LV95.
 
 FORMAT FREE;
 
