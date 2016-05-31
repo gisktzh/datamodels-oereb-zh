@@ -34,6 +34,7 @@
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
 !! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
 !! 2016.01.18/ns LV95
+!! 2016.05.31/ns Umbenennung des Modells: "V3" anstelle von "LV95"
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -74,7 +75,7 @@ TRANSFER Abstandslinien_ZH;
 !!* @Issuer http://oereb.zh.ch
 !!* @Version 2016-01-18
 
-MODEL Abstandslinien_ZH_V2_LV95
+MODEL Abstandslinien_ZH_V3
 
   DOMAIN
 
@@ -1196,7 +1197,7 @@ MODEL Abstandslinien_ZH_V2_LV95
 
   END TransferMetadaten.
 
-END Abstandslinien_ZH_V2_LV95.
+END Abstandslinien_ZH_V3.
 
 FORMAT FREE;
 
