@@ -5,6 +5,6 @@ Dies sind die Interlis Datenmodelle, welche im ÖREB-Kataster des Kantons Züric
 - \<Thema\>\_ZH\_IL1-Abgeleitet\_\<Version\>.ili: Dies war die initiale ili1-Ableitung des Master-Modelles. Hat keine Relevanz mehr.
 - implementation/\<Modell\>-[PROJ|PROTOKOLL|RG].ili: Dies sind die in GeosPro implementierten Modelle fuer projektierte, protokollierte und rechtsgueltige Daten (ev. veraltet)
 
-Die Modelle der zweiten Version (*_V2.ili) wurden im Q4/2015 aufgeschaltet.
-Die Modelle aufgrund der Einführung des neuen Referenzsystems (*_V2_LV95.ili) wurden im Q3/2016 aufgeschaltet.
+Die Modelle der zweiten Version (\*_V2.ili) wurden im Q4/2015 aufgeschaltet.
+Die Modelle aufgrund der Einführung des neuen Referenzsystems (\*_V2_LV95.ili) wurden im Q3/2016 aufgeschaltet.
 Die Modelle der vierten Version (*_V4.ili) werden im Q2/2017 aufgeschaltet.
