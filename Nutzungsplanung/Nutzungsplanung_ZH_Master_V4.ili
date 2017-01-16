@@ -1,0 +1,1182 @@
+INTERLIS 2.3;
+
+!!===================================================================================== 
+!! Kanton Zuerich 
+!! Baudirektion Kanton Zuerich
+!! Amt fuer Raumentwicklung
+!! Abteilung Raumplanung
+!! Stampfenbachstrasse 14 / Postfach
+!! 8090 Zuerich
+!!
+!! www.bd.zh.ch
+!!
+!! Geobasisdatensatz Nr. 73   Nutzungsplanung (kantonal / kommunal)
+!! Geobasisdatensatz Nr. 145  Laermempfindlichkeitsstufen (in Nutzungszonen)
+!!===================================================================================== 
+!! Revision History
+!! 2013.08.26/tg
+!! 2013.09.09/tg
+!! 2013.11.01/ht
+!! 2014.04.11/tg Anpassungen fuer implementiertes INTERLIS 1 Modell
+!! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2015.08.20/tg Korrektur DEPENDS ON Nutzungsplanung_ZH_V2.Verwaltung
+!! 2016.12.31/ht Tabelle Amt erweitert
+!!               Koordinatensystem auf LV95 umgestellt
+!!               GN_Zonenflaeche erweitert UeberweisungLegislative_Nummer, UeberweisungLegislative_Datum, Fassadenhoehe, Attikageschosse, Gruenflaechenziffer, Revisionsart
+!!               GN_Codes_Kanton Code geändert
+!!               UL_Flaeche / UL_Linie / UL_Punkt erweitert UeberweisungLegislative_Nummer, UeberweisungLegislative_Datum, PZ_Gueltig_bis
+!!               UL_Codes_*_Gemeinde Attribut Code_Auswahl gelöscht
+!!===================================================================================== 
+
+!!@ technicalContact = are@bd.zh.ch
+!!@ furtherInformation = http://www.bd.zh.ch
+!!@ IDGeoIV = "73,145"
+
+CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-08-20"  =
+
+   IMPORTS UNQUALIFIED INTERLIS;
+   IMPORTS UNQUALIFIED Units;
+   IMPORTS CoordSys;
+   IMPORTS UNQUALIFIED GeometryCHLV95_V1;
+   IMPORTS UNQUALIFIED CHAdminCodes_V1;
+
+   REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
+      OBJECTS OF GeoCartesian2D: CHLV03
+      OBJECTS OF GeoHeight: SwissOrthometricAlt;
+
+
+   !! Model Domains
+   !!==============
+
+   DOMAIN
+
+      ZHPoint = COORD
+         2480000.000 .. 2850000.000 [m] {CHLV95[1]},
+         1070000.000 .. 1310000.000 [m] {CHLV95[2]},
+         ROTATION 2 -> 1;
+
+      ZHSurface = SURFACE WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+      ZHArea = AREA WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+      ZHLine = POLYLINE WITH (STRAIGHTS, ARCS) VERTEX ZHPoint;
+      ZHDirectedLine EXTENDS ZHLine = DIRECTED POLYLINE;
+
+      RechtsstatusObjekt = (
+         inKraft,
+         laufendeAenderung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren
+         ),
+         Aufhebung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren
+         ),
+         provisorisch
+      );
+
+      Verbindlichkeit = (
+         Nutzungsplanfestlegung,
+         orientierend,
+         hinweisend,
+         wegleitend
+      );
+
+      Behoerde = (
+         RR,
+         BD,
+         VD,
+         andere
+      );
+
+      BehoerdeGewalt = (
+         Legislative,
+         Exekutive
+      );
+
+      JaNein = (
+         ja,
+         nein
+      );
+
+      TextGroesse = (
+         klein,
+         mittel,
+         gross
+      );
+
+      !! contracted functions (in INTERLIS nicht enthalten)
+      !!---------------------------------------------------
+
+      FUNCTION isPrefix(Prefix: TEXT; Value: TEXT): BOOLEAN;
+      !! Kontrolliert ob der Kanton Code C<bb><kk> der Prefix ist vom Gemeinde Code C<bb><kk><gg>
+      !! Eine Implementation des Modelles in einem System
+      !! soll diese Abhängigkeit auf ähnliche Art überprüfen
+
+
+   !! Rechtsvorschriften
+   !!===================
+
+   TOPIC Rechtsvorschriften =
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         DokumentArt = (
+           Rechtsvorschrift,
+           GesetzlicheGrundlage,
+           Hinweis
+         );
+
+         DokumentRechtsstatus = (
+            inKraft,
+            laufendeAenderung,
+            Aufhebung,
+            provisorisch
+         );
+
+
+      !! Classes
+      !!--------
+
+      CLASS RV_Dokument =
+         Art : MANDATORY DokumentArt;
+         Titel : MANDATORY TEXT*80;
+         OffiziellerTitel : TEXT*2400;
+         Abkuerzung : TEXT*10;
+         OffizielleNr : TEXT*20;
+         Kanton : CHAdminCodes_V1.CHCantonCode;
+         Gemeinde : CHAdminCodes_V1.CHMunicipalityCode;
+         publiziertAb : MANDATORY XMLDate;
+         Rechtsstatus : MANDATORY DokumentRechtsstatus;
+         TextImWeb : URI;
+         Dokument : BLACKBOX BINARY;
+         Bemerkungen : MTEXT*2400;
+         Genehmigungsdatum : XMLDate;
+      END RV_Dokument;
+
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION RV_HinweisWeitereDokumente =
+         Ursprung -- {0..*} RV_Dokument;
+         Hinweis -- {0..*} RV_Dokument;
+      END RV_HinweisWeitereDokumente;
+
+   END Rechtsvorschriften;
+
+
+   !! Verwaltung
+   !!===========
+
+   TOPIC Verwaltung =
+      DEPENDS ON Nutzungsplanung_ZH_V4.Rechtsvorschriften;
+
+      CLASS NP_Gemeinde = 
+        BFS_Nummer: MANDATORY CHMunicipalityCode;
+        Gemeinde_Name: MANDATORY TEXT*80;
+        Thema: MANDATORY (GN_Zonenflaeche, UL_Punkt, UL_Linie, UL_Flaeche, LS_Festlegung);
+
+      UNIQUE
+        BFS_Nummer,Thema;
+      END NP_Gemeinde;
+
+      ASSOCIATION Bez_RV_Gemeinde_Dokumente =
+         zuGemeinde -- {0..*} NP_Gemeinde;
+         Dokument (EXTERNAL) -- {0..*} Nutzungsplanung_ZH_V4.Rechtsvorschriften.RV_Dokument;
+      END Bez_RV_Gemeinde_Dokumente;
+
+   END Verwaltung;
+
+   !! Grundstrukturen
+   !!================
+
+   TOPIC Grundstrukturen (ABSTRACT) =
+      DEPENDS ON Nutzungsplanung_ZH_V4.Verwaltung;
+      DEPENDS ON Nutzungsplanung_ZH_V4.Rechtsvorschriften;
+
+      !! Classes Allgemein
+      !!------------------
+
+      CLASS Basis_Typ_Kanton (ABSTRACT)  =
+      END Basis_Typ_Kanton;
+
+      CLASS Basis_Typ_Gemeinde (ABSTRACT) =
+      END Basis_Typ_Gemeinde;
+
+      CLASS Basis_Objekt (ABSTRACT)  =
+      END Basis_Objekt;
+
+      CLASS Basis_Objekt_Text (ABSTRACT)  =
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         !! Textinhalt abhängig vom Darstellungsmodell
+         Text: MANDATORY TEXT*80;
+         Geometrie: MANDATORY ZHPoint;
+         Ori: Orientation;
+         HAli: HALIGNMENT;
+         VAli: VALIGNMENT;
+         Groesse: TextGroesse;
+      END Basis_Objekt_Text;
+
+      CLASS Basis_Objekt_Symbol (ABSTRACT)  =
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Geometrie: MANDATORY ZHPoint;
+         Ori: Orientation;
+      END Basis_Objekt_Symbol;
+
+      !! Associations als Vorlagen
+      !!--------------------------
+      !! Beziehungen:
+      !! Text/Symbol > Objekt (Geometrie) > Typ_Gemeinde > Typ_Kanton
+
+      !!ASSOCIATION Basis_Bez_Typ_Kanton_Typ_Gemeinde (ABSTRACT) =
+      !!   Typ_Kanton -- {1} Basis_Typ_Kanton;
+      !!   Typ_Gemeinde -- {0..*} Basis_Typ_Gemeinde;
+      !!MANDATORY CONSTRAINT
+      !!   !! Nutzungsplanung
+      !!   !! Regel Gemeinde-Code enstpricht einem Kantons-Code entsprechend C<bb><kk><gg>
+      !!   isPrefix(Typ_Kanton->Code,Typ_Gemeinde->Code);
+      !!END Basis_Bez_Typ_Kanton_Typ_Gemeinde;
+
+      !!ASSOCIATION Basis_Bez_Typ_Kanton_Objekt (ABSTRACT) =
+      !!   Typ_Kanton -- {1} Basis_Typ_Kanton;
+      !!   Objekt -- Basis_Objekt;
+      !!END Basis_Bez_Typ_Kanton_Objekt;
+
+      !!ASSOCIATION Basis_Bez_Typ_Gemeinde_Objekt (ABSTRACT) =
+      !!   Typ_Gemeinde -- {1} Basis_Typ_Gemeinde;
+      !!   Objekt -- {0..*} Basis_Objekt;
+      !!END Basis_Bez_Typ_Gemeinde_Objekt;
+
+      !!ASSOCIATION Basis_Bez_Objekt_Text (ABSTRACT) =
+      !!   Objekt  -<#> {1} Basis_Objekt;
+      !!   Text -- {0..*} Basis_Objekt_Text;
+      !!END Basis_Bez_Objekt_Text;
+
+      !!ASSOCIATION Basis_Bez_Objekt_Symbol (ABSTRACT) =
+      !!   Objekt  -<#> {1} Basis_Objekt;
+      !!   Symbol -- {0..*} Basis_Objekt_Symbol;
+      !!END Basis_Bez_Objekt_Symbol;
+
+      !! Associations konkret
+      !!---------------------
+      !! Beziehungen:
+      !! Objekt/Typ_Gemeinde/Typ_Kanton > Dokument
+
+      ASSOCIATION Bez_Dokument_Typ_Kanton =
+         Dokument (EXTERNAL) -- {0..*} Nutzungsplanung_ZH_V4.Rechtsvorschriften.RV_Dokument;
+         Typ_Kanton -- {0..*} Basis_Typ_Kanton;
+      END Bez_Dokument_Typ_Kanton;
+
+      ASSOCIATION Bez_Dokument_Typ_Gemeinde  =
+         Dokument (EXTERNAL) -- {0..*} Nutzungsplanung_ZH_V4.Rechtsvorschriften.RV_Dokument;
+         Typ_Gemeinde -- {0..*} Basis_Typ_Gemeinde;
+      END Bez_Dokument_Typ_Gemeinde;
+
+      ASSOCIATION Bez_Dokument_Objekt =
+         Dokument (EXTERNAL) -- {0..*} Nutzungsplanung_ZH_V4.Rechtsvorschriften.RV_Dokument;
+         Objekt -- {0..*} Basis_Objekt;
+      END Bez_Dokument_Objekt;
+
+
+      !! Classes Nutzungsplaung
+      !!-----------------------
+
+      CLASS NP_Typ_Kanton (ABSTRACT)
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Typ_Kanton =
+
+         !! Code : MANDATORY Aufzaehlung Kanton entprechend Klasse
+         Bezeichnung : MANDATORY TEXT*80;
+         Abkuerzung : TEXT*12;
+         Beschreibung : MTEXT*2400;
+
+      END NP_Typ_Kanton;
+
+      CLASS NP_Typ_Gemeinde (ABSTRACT)
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Typ_Gemeinde =
+
+         !! Code: MANDATORY Text Gemeinde entprechend Klasse
+         Bezeichnung : MANDATORY TEXT*80;
+         Abkuerzung : TEXT*12;
+         Beschreibung : MTEXT*2400;
+
+      END NP_Typ_Gemeinde;
+
+      CLASS NP_Objekt (ABSTRACT)
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt =
+
+         publiziertAb : MANDATORY XMLDate;
+         Bemerkungen : MTEXT*2400;
+         Identifikator : UUIDOID;
+         Vorpruefung_Behoerde: TEXT*80;
+         Vorpruefung_Datum: XMLDate;
+         Vorpruefung_Nummer: TEXT*80;
+         OeffentlicheAuflage_Behoerde: TEXT*80;
+         OeffentlicheAuflage_Datum: XMLDate;
+         OeffentlicheAuflage_Nummer: TEXT*80;
+         Festsetzung_Behoerde: TEXT*80;
+         Festsetzung_Behoerde_Gewalt: BehoerdeGewalt;
+         Festsetzung_Datum: XMLDate;
+         Festsetzung_Nummer: TEXT*80;
+         Genehmigung_Behoerde_Auswahl: Behoerde;
+         Genehmigung_Behoerde: TEXT*80;
+         Genehmigung_Datum: XMLDate;
+         Genehmigung_Nummer: TEXT*80;
+         inKraftsetzung_Behoerde: TEXT*80;
+         inKraftsetzung_Behoerde_Gewalt: BehoerdeGewalt := #Exekutive;
+         inKraftsetzung_Datum: XMLDate;
+         inKraftsetzung_Nummer: TEXT*80;
+         UeberweisungLegislative_Datum: XMLDate;
+         UeberweisungLegislative_Nummer: TEXT*80;
+
+      UNIQUE
+         Identifikator;
+
+      MANDATORY CONSTRAINT
+         !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+         !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+         NOT (DEFINED(Genehmigung_Behoerde_Auswahl)) AND NOT (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl == #andere)) AND (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl != #andere)) AND (DEFINED(Genehmigung_Behoerde) AND (Genehmigung_Behoerde == Genehmigung_Behoerde_Auswahl));
+
+      END NP_Objekt;
+
+   END Grundstrukturen;
+
+   !! Grundnutzung
+   !!=============
+
+   TOPIC Grundnutzung EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen =
+      DEPENDS ON Nutzungsplanung_ZH_V4.Rechtsvorschriften;
+      DEPENDS ON Nutzungsplanung_ZH_V4.Verwaltung;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         Prozent              = 0 .. 100;
+         Ausnuetzungsziffer   = 0 .. 499;
+         Baumassenziffer      = 0.00 .. 99.99;
+         Ueberbauungsziffer   = 0 .. 99;
+         Vollgeschosse        = 0 .. 99;
+         Dachgeschosse        = 0 .. 9;
+         Untergeschosse       = 0 .. 9;
+         Freiflaechenziffer   = 0 .. 99;
+         Gebaeudehoehe        = 0.0 .. 999.9;
+         Firsthoehe           = 0.0 .. 9.9;
+   
+         !! Codes Bund als Information 
+         !! Code: C<bb>
+         !! <bb> 2-stellig int eindeutiger Code Bund
+
+         GN_Codes_Bund = (
+            C11, !! Wohnzonen
+            C12, !! Arbeitszonen
+            C13, !! Mischzonen
+            C14, !! Zentrumszonen
+            C15, !! Zonen_fuer_oeffentliche_Nutzungen
+            C16, !! eingeschraenkte_Bauzonen
+            C17, !! Tourismus_und_Freizeitzonen
+            C18, !! Verkehrszonen_innerhalb_der_Bauzonen
+            C19, !! weitere_Bauzonen
+            C21, !! allgemeine_Landwirtschaftszonen
+            C22, !! Speziallandwirtschaftszonen
+            C23, !! Rebbauzonen
+            C29, !! weitere_Landwirtschaftszonen
+            C31, !! Schutzzonen_fuer_Lebensraeume_und_Landschaften
+            C32, !! Zonen_fuer_Gewaesser_und_ihre_Ufer
+            C39, !! weitere_Schutzzonen_ausserhalb_der_Bauzonen
+            C41, !! Zonen_fuer_Kleinsiedlung
+            C42, !! Verkehrsflaechen
+            C43, !! Reservezonen_nach_Art_18_Abs_2_RPG
+            C44, !! Wald
+            C49  !! weitere_Zonen_nach_Art_18_Abs_1_RPG_ausserhalb_der_Bauzonen
+         );
+
+         
+         !! Codes Kanton
+         !! Code: C<bb><kk>
+         !! <bb> 2-stellig int eindeutiger Code Bund
+         !! <kk> 2-stellig int eindeutiger Code Kanton
+   
+         GN_Codes_Kanton = (
+          C1101, !! Wohnzonen 1 Vollgeschoss
+          C1102, !! Wohnzonen 2 Vollgeschosse
+          C1103, !! Wohnzonen 3 Vollgeschosse
+          C1104, !! Wohnzonen 4 Vollgeschosse
+          C1105, !! Wohnzonen 5 und mehr Vollgeschosse
+          C1201, !! Industrie- und Gewerbezonen mit Handels- und Dienstleistungsgewerbe
+          C1202, !! Industrie- und Gewerbezonen mit eingeschränktem Handels- und Dienstleistungsgewerbe
+          C1203, !! Industriezonen ohne Handels- und Dienstleistungsgewerbe
+          C1301, !! Wohnzonen mit Gewerbeerleichterung 1 Vollgeschoss
+          C1302, !! Wohnzonen mit Gewerbeerleichterung 2 Vollgeschosse
+          C1303, !! Wohnzonen mit Gewerbeerleichterung 3 Vollgeschosse
+          C1304, !! Wohnzonen mit Gewerbeerleichterung 4 Vollgeschosse
+          C1305, !! Wohnzonen mit Gewerbeerleichterung 5 und mehr Vollgeschosse 
+          C1306, !! Quartiererhaltungszonen
+          C1307, !! Kernzonen
+          C1401, !! Zentrumszonen
+          C1501, !! Zonen_fuer_oeffentliche_Bauten
+          C1601, !! Erholungszonen
+          C2101, !! Kantonale_Landwirtschaftszonen
+          C2102, !! Kommunale_Landwirtschaftszonen
+          C3101, !! Ueberkommunale_Freihaltezonen
+          C3102, !! Kommunale_Freihaltezonen
+          C3201, !! Gewaesser
+          C4101, !! Weiler
+          C4201, !! Flughafenareal
+          C4202, !! Bahnareal
+          C4203, !! Strassen
+          C4301, !! Reservezonen
+          C4401, !! Wald
+          C4901  !! Nicht_zugewiesene_Zonen
+         );
+
+         RevisionsartT = (Aenderung_Bauordnung,
+                          Aenderung_Zonenplan,
+                          Aenderung_Bauordnung_Zonenplan,
+                          weitere);
+
+      !! Classes
+      !!--------
+      CLASS GN_Typ_Kanton 
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Kanton =
+
+         Code : MANDATORY GN_Codes_Kanton;
+
+      UNIQUE
+         Code;
+
+      END GN_Typ_Kanton;
+
+      CLASS GN_Typ_Gemeinde
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Gemeinde =
+         Verbindlichkeit : MANDATORY Verbindlichkeit;
+
+         Code : MANDATORY TEXT*7; !! C<bb><kk><gg>
+
+      END GN_Typ_Gemeinde;
+
+      CLASS GN_Zonenflaeche
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Objekt =
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+
+         Ausnuetzungsziffer_Min : Ausnuetzungsziffer;
+         Ausnuetzungsziffer_Max : Ausnuetzungsziffer;
+         Baumassenziffer_Min : Baumassenziffer;
+         Baumassenziffer_Max : Baumassenziffer;
+         Ueberbauungsziffer_Min : Ueberbauungsziffer;
+         Ueberbauungsziffer_Max : Ueberbauungsziffer;
+         Vollgeschosse_Max : Vollgeschosse;
+         Dachgeschosse_Max : Dachgeschosse;
+         Untergeschosse_Max : Untergeschosse;
+         Freiflaechenziffer_Min : Freiflaechenziffer;
+         Gesamthoehe : Gebaeudehoehe;
+         Gebaeudehoehe_Max : Gebaeudehoehe;
+         Firsthoehe_Max : Firsthoehe;
+         Wohnanteil_Min: Prozent;
+         Wohnanteil_Max: Prozent;
+         Gewerbeanteil_Min: Prozent;
+         Gewerbeanteil_Max: Prozent;
+         Innenliegende_Freihaltezone: JaNein;
+         Fassadenhoehe: 0.0..999.9;
+         Attikageschosse: 0..9;
+         Gruenflaechenziffer: 0..99;
+         Revisionsart: RevisionsartT;
+         Geometrie : ZHArea;
+
+         ProjGeometrie : ZHSurface;
+
+      MANDATORY CONSTRAINT
+         !! wenn Rechsstatus == inKraft -> Geometrie muss definiert sein,   ProjGeometrie muss undefiniert sein
+         !! wenn Rechsstatus != inKraft -> Geometrie muss undefiniert sein, ProjGeometrie muss definiert sein
+         !! Geometrie muss definiert sein
+         !! ProjGeometrie darf nicht definiert sein
+         (Rechtsstatus == #inKraft) AND (DEFINED(Geometrie) AND NOT (DEFINED(ProjGeometrie)))
+         OR
+         (Rechtsstatus != #inKraft) AND (NOT (DEFINED(Geometrie)) AND DEFINED(ProjGeometrie));
+
+      !! possible other constraint with one attribute Geometrie as SURFACE
+      !! but will areAreas be implemented ?
+      !! SET CONSTRAINT WHERE Rechtsstatus == #inKraft
+      !!   areAreas(ALL, UNDEFINED, >> Geometrie);
+      !! END GN_Zonenflaeche;
+
+      END GN_Zonenflaeche;
+
+      CLASS GN_Zonenflaeche_Text
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Text =
+      END GN_Zonenflaeche_Text;
+
+      CLASS GN_Zonenflaeche_Symbol
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Symbol =
+      END GN_Zonenflaeche_Symbol;
+
+
+      !! Associations
+      !!-------------
+      ASSOCIATION Bez_GN_Gemeinde_Typ_Gemeinde =
+         Gemeinde (EXTERNAL) -<#> {1} Nutzungsplanung_ZH_V4.Verwaltung.NP_Gemeinde;
+         Typ_Gemeinde -- {0..*} GN_Typ_Gemeinde;
+
+      UNIQUE
+         Gemeinde->BFS_Nummer,Typ_Gemeinde->Code;
+
+      END Bez_GN_Gemeinde_Typ_Gemeinde;
+
+      ASSOCIATION Bez_GN_Typ_Kanton_Typ_Gemeinde =
+         Typ_Kanton -- {1} GN_Typ_Kanton;
+         Typ_Gemeinde -- {0..*} GN_Typ_Gemeinde;
+      MANDATORY CONSTRAINT
+         !! Regel Gemeinde-Code enstpricht einem Kantons-Code entsprechend C<bb><kk><gg>
+         isPrefix(Typ_Kanton->Code,Typ_Gemeinde->Code);
+      END Bez_GN_Typ_Kanton_Typ_Gemeinde;
+
+      ASSOCIATION Bez_GN_Typ_Gemeinde_Zonenflaeche =
+         Typ_Gemeinde -- {1} GN_Typ_Gemeinde;
+         Objekt -- {0..*} GN_Zonenflaeche;
+      END Bez_GN_Typ_Gemeinde_Zonenflaeche;
+
+      ASSOCIATION Bez_GN_Zonenflaeche_Text =
+         Objekt -<#> {1} GN_Zonenflaeche;
+         Text -- {0..*} GN_Zonenflaeche_Text;
+      END Bez_GN_Zonenflaeche_Text;
+
+      ASSOCIATION Bez_GN_Zonenflaeche_Symbol =
+         Objekt -<#> {1} GN_Zonenflaeche;
+         Symbol -- {0..*}GN_Zonenflaeche_Symbol;
+      END Bez_GN_Zonenflaeche_Symbol;
+
+   END Grundnutzung;
+
+
+   !! Ueberlagerung
+   !!==============
+
+   TOPIC Ueberlagerung EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen =
+      DEPENDS ON Nutzungsplanung_ZH_V4.Rechtsvorschriften;
+      DEPENDS ON Nutzungsplanung_ZH_V4.Verwaltung;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         Gestaltungsplanart = (
+            oeffentlich,
+            privat,
+            oeffentlich_oder_privat
+         );
+
+
+         !! Codes Bund als Information 
+         !! Code: C<bb>
+         !! <bb> 2-stellig int eindeutiger Code Bund
+
+         UL_Codes_Flaechen_Bund = (
+            C51, !! Ueberlagernde_Ortsbildschutzzonen
+            C52, !! Ueberlagernde_Schutzzonen_fuer_Lebensraeume_und_Landschaften
+            C53, !! Ueberlagernde_Gefahrenzonen
+            C59, !! weitere_ueberlagernde_Nutzungszonen
+            C61, !! Bereiche_rechtsgueltiger_Sondernutzungsplaene
+            C62, !! Bereiche_mit_Sondernutzungsplanungspflicht
+            C63, !! Bereiche_einer_spaeteren_Erschliessungsetappe
+            C69  !! weitere_flaechenbezogene_Festlegungen
+         );
+
+         UL_Codes_Linien_Bund = (
+            C71, !! Baulinien
+            C79  !! weitere_linienbezogene_Festlegungen
+         );
+         
+         UL_Codes_Punkte_Bund = (
+            C81, !! Naturobjekte
+            C82, !! Kulturobjekte
+            C89  !! weitere_punktbezogene_Festlegungen
+         );
+         
+         !! Codes Kanton
+         !! Code: C<bb><kk>
+         !! <bb> 2-stellig int eindeutiger Code Bund
+         !! <kk> 2-stellig int eindeutiger Code Kanton
+   
+         UL_Codes_Flaechen_Kanton = (
+            C6101, !! Ueberkommunale_Gestaltungsplaene
+            C6102, !! Kommunale_Gestaltungsplaene
+            C6103, !! Sonderbauvorschriften
+            C6201, !! Gestaltungsplanpflicht
+            C6901, !! Planungszonen
+            C6902, !! Quartierplaene
+            C6903, !! Gebietssanierungen
+            C6904, !! Ergänzungspläne
+            C6905, !! Ausnützung
+            C6906, !! Bauweise
+            C6907, !! Nutzweise
+            C6908, !! Aussichtsschutz Fläche
+            C6909, !! Arealüberbauungen
+            C6910, !! flächenbezogene Festlegung in Ergänzungsplänen
+            C6911  !! weitere flächenbezogene Festlegungen
+         );
+
+         UL_Codes_Linien_Kanton = (
+            C7901, !! Aussichtsschutz Linie
+            C7902, !! linienbezogene Festlegung in Ergänzungsplänen
+            C7903  !! Weitere linienbezogene Festlegungen
+         );
+
+         UL_Codes_Punkte_Kanton = (
+            C8901, !! Aussichtsschutz Punkt
+            C8902, !! punktbezogene Festlegung in Ergänzungsplänen
+            C8903  !! Weitere punktbezogene Festlegungen
+
+         );
+
+         !! Codes Gemeinde
+         !! Code: C<bb><kk>
+         !! <bb> 2-stellig int eindeutiger Code Bund
+         !! <kk> 2-stellig int eindeutiger Code Kanton
+         !! <gg> 2-stellig int eindeutiger Code Gemeinde
+   
+         UL_Wirksamkeit = (
+            links,
+            rechts,
+            beidseits
+         );
+
+         UL_Bereich_Herkunft = (
+            Aufnahme,
+            Uebernahme_Koordinaten,
+            Planabgriff,
+            Konstruktion,
+            andere
+         );
+
+
+      !! Ueberlagernde_Festlegung
+      !!-------------------------
+
+      !! Classes
+      !!--------
+
+      CLASS UL_Flaeche_Typ_Kanton 
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Kanton =
+
+         Code : MANDATORY UL_Codes_Flaechen_Kanton;
+
+      UNIQUE
+         Code;
+
+      END UL_Flaeche_Typ_Kanton;
+
+      CLASS UL_Flaeche_Typ_Gemeinde
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Gemeinde =
+         Verbindlichkeit : MANDATORY Verbindlichkeit;
+         Code : MANDATORY TEXT*7; !! C<bb><kk><gg>
+         
+      MANDATORY CONSTRAINT
+         !! wenn abschliessende       Aufzaehlung Code_Auswahl != C6907xx -> Code = Code_Auswahl
+         !! wenn nicht abschliessende Aufzaehlung Code_Auswahl == C6907xx -> Code muss mit C6907 anfangen
+         (Code_Auswahl != #C6907xx) AND (Code == Code_Auswahl)
+         OR
+         (Code_Auswahl == #C6907xx) AND (isPrefix(#C6907,Code));
+
+      END UL_Flaeche_Typ_Gemeinde;
+
+      CLASS UL_Flaeche
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Objekt =
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+
+         Gestaltungsplanart : Gestaltungsplanart;
+         Bezeichnung_Gemeinde : TEXT*80;
+         PZ_Gueltig_bis : XMLDate;
+
+         Geometrie : MANDATORY ZHSurface;
+      END UL_Flaeche;
+
+      CLASS UL_Bereich =
+         Identifikator : UUIDOID;
+         Bezeichnung_Gemeinde : TEXT*80;
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Herkunft: UL_Bereich_Herkunft;
+         Geometrie : MANDATORY ZHSurface;
+
+      UNIQUE
+         Identifikator;
+
+      END UL_Bereich;
+
+      CLASS UL_Flaeche_Text
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Text =
+      END UL_Flaeche_Text;
+
+      CLASS UL_Flaeche_Symbol
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Symbol =
+      END UL_Flaeche_Symbol;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION Bez_UL_Flaeche_Gemeinde_Typ_Gemeinde =
+         Gemeinde (EXTERNAL) -<#> {1} Nutzungsplanung_ZH_V4.Verwaltung.NP_Gemeinde;
+         Typ_Gemeinde -- {0..*} UL_Flaeche_Typ_Gemeinde;
+
+      UNIQUE
+         Gemeinde->BFS_Nummer,Typ_Gemeinde->Code;
+
+      END Bez_UL_Flaeche_Gemeinde_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Flaeche_Typ_Kanton_Typ_Gemeinde =
+         Typ_Kanton -- {1} UL_Flaeche_Typ_Kanton;
+         Typ_Gemeinde -- {0..*} UL_Flaeche_Typ_Gemeinde;
+      MANDATORY CONSTRAINT
+         !! Regel Gemeinde-Code enstpricht einem Kantons-Code entsprechend C<bb><kk><gg>
+         isPrefix(Typ_Kanton->Code,Typ_Gemeinde->Code);
+      END Bez_UL_Flaeche_Typ_Kanton_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Flaeche_Typ_Gemeinde =
+         Typ_Gemeinde -- {1} UL_Flaeche_Typ_Gemeinde;
+         Objekt -- {0..*} UL_Flaeche;
+      END Bez_UL_Flaeche_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Flaeche_Bereich =
+         Flaeche -<#> {1} UL_Flaeche;
+         Bereich -- {0..*} UL_Bereich;
+
+      MANDATORY CONSTRAINT
+         !! UL_Bereich nur f?r bestimmte UL_Flaeche
+         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610101)
+         OR
+         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610102)
+         OR
+         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610201)
+         OR
+         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610301)
+         OR
+         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C690401)
+         OR
+         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C690501)
+         OR
+         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C6907xx);
+
+      END Bez_UL_Flaeche_Bereich;
+
+      ASSOCIATION Bez_UL_Flaeche_Text =
+         Objekt -<#> {1} UL_Flaeche;
+         Text -- {0..*} UL_Flaeche_Text;
+      END Bez_UL_Flaeche_Text;
+
+      ASSOCIATION Bez_UL_Flaeche_Symbol =
+         Objekt -<#> {1} UL_Flaeche;
+         Symbol -- {0..*}UL_Flaeche_Symbol;
+      END Bez_UL_Flaeche_Symbol;
+
+
+      !! Linienbezogene_Festlegung
+      !!--------------------------
+
+      !! Classes
+      !!--------
+
+      CLASS UL_Linie_Typ_Kanton 
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Kanton =
+
+         Code : MANDATORY UL_Codes_Linien_Kanton;
+
+      UNIQUE
+         Code;
+
+      END UL_Linie_Typ_Kanton;
+
+      CLASS UL_Linie_Typ_Gemeinde
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Gemeinde =
+
+         Verbindlichkeit : MANDATORY Verbindlichkeit;
+         Code : MANDATORY TEXT*7; !! C<bb><kk><gg>
+         
+      MANDATORY CONSTRAINT
+         !! wenn abschliessende       Aufzaehlung Code_Auswahl != C7901xx -> Code = Code_Auswahl
+         !! wenn nicht abschliessende Aufzaehlung Code_Auswahl == C7901xx -> Code muss mit C7901 anfangen
+         (Code_Auswahl != #C7901xx) AND (Code == Code_Auswahl)
+         OR
+         (Code_Auswahl == #C7901xx) AND (isPrefix(#C7901,Code));
+
+      END UL_Linie_Typ_Gemeinde;
+
+      CLASS UL_Linie
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Objekt =
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+
+         Wirksamkeit : UL_Wirksamkeit;
+         PZ_Gueltig_bis : XMLDate;
+         Geometrie : MANDATORY ZHDirectedLine;
+      END UL_Linie;
+
+      CLASS UL_Linie_Text
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Text =
+      END UL_Linie_Text;
+
+      CLASS UL_Linie_Symbol
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Symbol =
+      END UL_Linie_Symbol;
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION Bez_UL_Linie_Gemeinde_Typ_Gemeinde =
+         Gemeinde (EXTERNAL) -<#> {1} Nutzungsplanung_ZH_V4.Verwaltung.NP_Gemeinde;
+         Typ_Gemeinde -- {0..*} UL_Linie_Typ_Gemeinde;
+
+      UNIQUE
+         Gemeinde->BFS_Nummer,Typ_Gemeinde->Code;
+
+      END Bez_UL_Linie_Gemeinde_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Linie_Typ_Kanton_Typ_Gemeinde =
+         Typ_Kanton -- {1} UL_Linie_Typ_Kanton;
+         Typ_Gemeinde -- {0..*} UL_Linie_Typ_Gemeinde;
+      MANDATORY CONSTRAINT
+         !! Regel Gemeinde-Code enstpricht einem Kantons-Code entsprechend C<bb><kk><gg>
+         isPrefix(Typ_Kanton->Code,Typ_Gemeinde->Code);
+      END Bez_UL_Linie_Typ_Kanton_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Linie_Typ_Gemeinde =
+         Typ_Gemeinde -- {1} UL_Linie_Typ_Gemeinde;
+         Objekt -- {0..*} UL_Linie;
+      END Bez_UL_Linie_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Linie_Text =
+         Objekt -<#> {1} UL_Linie;
+         Text -- {0..*} UL_Linie_Text;
+      END Bez_UL_Linie_Text;
+
+      ASSOCIATION Bez_UL_Linie_Symbol =
+         Objekt -<#> {1} UL_Linie;
+         Symbol -- {0..*}UL_Linie_Symbol;
+      END Bez_UL_Linie_Symbol;
+
+      !! Objektbezogene_Festlegung
+      !!--------------------------
+
+      !! Classes
+      !!--------
+
+      CLASS UL_Punkt_Typ_Kanton 
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Kanton =
+
+         Code : MANDATORY UL_Codes_Punkte_Kanton;
+
+      UNIQUE
+         Code;
+
+      END UL_Punkt_Typ_Kanton;
+
+      CLASS UL_Punkt_Typ_Gemeinde
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Gemeinde =
+
+         Code : MANDATORY TEXT*7; !! C<bb><kk><gg>
+         
+      MANDATORY CONSTRAINT
+         !! wenn abschliessende       Aufzaehlung Code_Auswahl != C8901xx -> Code = Code_Auswahl
+         !! wenn nicht abschliessende Aufzaehlung Code_Auswahl == C8901xx -> Code muss mit C8901 anfangen
+         (Code_Auswahl != #C8901xx) AND (Code == Code_Auswahl)
+         OR
+         (Code_Auswahl == #C8901xx) AND (isPrefix(#C8901,Code));
+
+      END UL_Punkt_Typ_Gemeinde;
+
+      CLASS UL_Punkt
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Objekt =
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         PZ_Gueltig_bis : XMLDate;
+
+         Ori: Orientation;
+         Geometrie : MANDATORY ZHPoint;
+      END UL_Punkt;
+
+      CLASS UL_Punkt_Text
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Text =
+      END UL_Punkt_Text;
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION Bez_UL_Punkt_Gemeinde_Typ_Gemeinde =
+         Gemeinde (EXTERNAL) -<#> {1} Nutzungsplanung_ZH_V4.Verwaltung.NP_Gemeinde;
+         Typ_Gemeinde -- {0..*} UL_Punkt_Typ_Gemeinde;
+
+      UNIQUE
+         Gemeinde->BFS_Nummer,Typ_Gemeinde->Code;
+
+      END Bez_UL_Punkt_Gemeinde_Typ_Gemeinde;
+
+
+      ASSOCIATION Bez_UL_Punkt_Typ_Kanton_Typ_Gemeinde =
+         Typ_Kanton -- {1} UL_Punkt_Typ_Kanton;
+         Typ_Gemeinde -- {0..*} UL_Punkt_Typ_Gemeinde;
+      MANDATORY CONSTRAINT
+         !! Regel Gemeinde-Code enstpricht einem Kantons-Code entsprechend C<bb><kk><gg>
+         isPrefix(Typ_Kanton->Code,Typ_Gemeinde->Code);
+      END Bez_UL_Punkt_Typ_Kanton_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Punkt_Typ_Gemeinde =
+         Typ_Gemeinde -- {1} UL_Punkt_Typ_Gemeinde;
+         Objekt -- {0..*} UL_Punkt;
+      END Bez_UL_Punkt_Typ_Gemeinde;
+
+      ASSOCIATION Bez_UL_Punkt_Text =
+         Objekt -<#> {1} UL_Punkt;
+         Text -- {0..*} UL_Punkt_Text;
+      END Bez_UL_Punkt_Text;
+
+   END Ueberlagerung;
+
+
+   !! Laermempfindlichkeit 
+   !!=====================
+
+   TOPIC Laermempfindlichkeit  EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen =
+      DEPENDS ON Nutzungsplanung_ZH_V4.Rechtsvorschriften;
+      DEPENDS ON Nutzungsplanung_ZH_V4.Verwaltung;
+
+      DOMAIN
+
+         LS_Codes = (
+            Keine_ES,
+            ES_I,
+            ES_II,
+            ES_III,
+            ES_IV
+         );
+
+         LS_Festlegungstyp = (
+            Rahmennutzungsplanung (
+               Allgemein,
+               MaessigStoerendesGewerbeZulaessig,
+               Laermvorbelastung
+            ),
+            Sondernutzungsplanung
+         );
+
+
+      !! Classes
+      !!--------
+      CLASS LS_Typ
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Kanton =
+
+         Code : MANDATORY LS_Codes;
+         Aufgestuft : MANDATORY JaNein;
+         Verbindlichkeit : MANDATORY Verbindlichkeit;
+
+      MANDATORY CONSTRAINT
+         !! wenn Aufgestuft == true -> Code muss ES_II oder ES_III sein
+         !! wenn Aufgestuft != true -> Code egal
+         (Aufgestuft == #ja) AND ((Code == #ES_II) OR (Code == #ES_III))
+         OR
+         (Aufgestuft != #ja);
+
+      UNIQUE
+         Code,Aufgestuft;
+
+      END LS_Typ;
+
+      CLASS LS_Festlegung
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt =
+
+         publiziertAb : MANDATORY XMLDate;
+         Bemerkungen : MTEXT*2400;
+         Identifikator : UUIDOID;
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Festlegungstyp : LS_Festlegungstyp;
+
+         Geometrie : ZHArea;
+
+         ProjGeometrie : ZHSurface;
+
+      MANDATORY CONSTRAINT
+         !! wenn Rechsstatus == inKraft -> Geometrie muss definiert sein,   ProjGeometrie muss undefiniert sein
+         !! wenn Rechsstatus != inKraft -> Geometrie muss undefiniert sein, ProjGeometrie muss definiert sein
+         (Rechtsstatus == #inKraft) AND (DEFINED(Geometrie) AND NOT (DEFINED(ProjGeometrie)))
+         OR
+         (Rechtsstatus != #inKraft) AND (NOT (DEFINED(Geometrie)) AND DEFINED(ProjGeometrie));
+
+      END LS_Festlegung;
+
+      CLASS LS_Text
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Text =
+      END LS_Text;
+
+      CLASS LS_Symbol
+            EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.Basis_Objekt_Symbol =
+      END LS_Symbol;
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION Bez_LS_Gemeinde =
+         Gemeinde (EXTERNAL) -<#> {1} Nutzungsplanung_ZH_V4.Verwaltung.NP_Gemeinde;
+         Objekt -- {0..*} LS_Festlegung;
+
+      !! UNIQUE
+      !! Gemeinde->BFS_Nummer,Objekt->Typ_Kanton->Code;
+
+      END Bez_LS_Gemeinde;
+
+      ASSOCIATION Bez_LS_Typ =
+         Typ_Kanton -- {1} LS_Typ;
+         Objekt -- {0..*} LS_Festlegung;
+      END Bez_LS_Typ;
+
+      ASSOCIATION Bez_LS_Text =
+         Objekt -<#> {1} LS_Festlegung;
+         Text -- {0..*} LS_Text;
+      END Bez_LS_Text;
+
+      ASSOCIATION Bez_LS_Symbol =
+         Objekt -<#> {1} LS_Festlegung;
+         Symbol -- {0..*}LS_Symbol;
+      END Bez_LS_Symbol;
+
+   END Laermempfindlichkeit ;
+
+
+   !! Projekte
+   !!=========
+
+   TOPIC Projekte =
+      DEPENDS ON Nutzungsplanung_ZH_V4.Grundnutzung;
+      DEPENDS ON Nutzungsplanung_ZH_V4.Ueberlagerung;
+      DEPENDS ON Nutzungsplanung_ZH_V4.Laermempfindlichkeit;
+
+
+      CLASS Projekt =
+
+         Nummer : MANDATORY TEXT*80;
+         Bewirtschafter : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+         Projektzustand : RechtsstatusObjekt;
+         DatumLetztePublikation : XMLDate;
+
+      UNIQUE
+         Nummer;
+
+      END Projekt;
+
+      CLASS Projekt_Perimeter =
+
+         Geometrie : MANDATORY ZHSurface;
+
+      END Projekt_Perimeter;
+
+      CLASS Variante =
+
+         Nummer : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+
+      END Variante;
+
+
+      ASSOCIATION Bez_Projekt_Perimeter =
+
+         ProjektRef -- {1} Projekt;
+         PerimeterRef -<> {0..*}    Projekt_Perimeter;
+
+      END Bez_Projekt_Perimeter;
+
+      ASSOCIATION Bez_Projekt_Variante =
+
+         ProjektRef -- {1} Projekt;
+         VarianteRef -<> {0..*} Variante;
+
+      END Bez_Projekt_Variante;
+
+      ASSOCIATION Ausschluss =
+
+         Variante_A_Ref -- {1..*}    Variante;
+         Variante_B_Ref -- {1..*}    Variante;
+
+      END Ausschluss;
+
+      ASSOCIATION Bez_Projekt_Objekt =
+
+         ObjektProjektRef -- {0..*} Projekt;
+         ObjektVarianteRef -- {0..1} Variante;
+
+         ObjektRef (EXTERNAL) -<> {0..*}   Nutzungsplanung_ZH_V4.Grundnutzung.GN_Zonenflaeche
+                                        OR Nutzungsplanung_ZH_V4.Ueberlagerung.UL_Flaeche
+                                        OR Nutzungsplanung_ZH_V4.Ueberlagerung.UL_Linie
+                                        OR Nutzungsplanung_ZH_V4.Ueberlagerung.UL_Punkt 
+                                        OR Nutzungsplanung_ZH_V4.Laermempfindlichkeit.LS_Festlegung; 
+
+      END Bez_Projekt_Objekt;
+
+   END Projekte;
+
+
+   !! Transfer Metadaten
+   !!===================
+
+   TOPIC TransferMetadaten =
+
+      !! Classes
+      !!--------
+
+      CLASS Amt =
+         Name :           MANDATORY TEXT*80;
+         Foederale_Stufe: MANDATORY (Bund, Kanton, Gemeinde);
+         BFS_Nummer:      CHAdminCodes_V1.CHMunicipalityCode; !! Nur falls Foederale_Stufe = Gemeinde
+         Kuerzel:         CHAdminCodes_V1.CHCantonCode;  !! Nur falls Foederale_Stufe = Bund oder Kanton
+         AmtImWeb:        URI;
+         UID:             TEXT*20;
+         Zeile1:          TEXT*255;
+         Zeile2:          TEXT*255;
+         Strasse:         TEXT*60;
+         Hausnr:          TEXT*12;
+         PLZ:             1000..9999;
+         Ort:             TEXT*40;
+      END Amt;
+
+      CLASS Darstellungsdienst =
+         VerweisWMS : URI;
+         LegendeImWeb : URI;
+      END Darstellungsdienst;
+
+      CLASS Datenbestand =
+         BasketId : TEXT*80;
+         Stand : MANDATORY XMLDate;
+         Lieferdatum : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         weitereMetadaten : URI;
+      END Datenbestand;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION zustaendigeStelleDatenbestand =
+         zustaendigeStelle -- {1} Amt;
+         Datenbestand -<> {0..*} Datenbestand;
+      END zustaendigeStelleDatenbestand;
+
+      ASSOCIATION DarstellungsdienstDatenbestand =
+         Darstellungsdienst -- {1} Darstellungsdienst;
+         Datenbestand -<> {0..*} Datenbestand;
+      END DarstellungsdienstDatenbestand;
+
+   END TransferMetadaten;
+
+END Nutzungsplanung_ZH_V4.
+

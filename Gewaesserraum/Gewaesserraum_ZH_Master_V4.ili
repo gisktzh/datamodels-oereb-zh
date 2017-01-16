@@ -1,0 +1,399 @@
+INTERLIS 2.3;
+
+!!===================================================================================== 
+!! Kanton Zuerich 
+!! Baudirektion Kanton Zuerich
+!! Amt fuer Raumentwicklung
+!! Abteilung Raumplanung
+!! Stampfenbachstrasse 14 / Postfach
+!! 8090 Zuerich
+!!
+!! www.bd.zh.ch
+!!
+!! Geobasisdatensatz Nr. 190  Gewaesserraum
+!!===================================================================================== 
+!! Revision History
+!! 2015.04.27/tg created
+!! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2016.12.31/ht Tabelle Amt erweitert
+!!               Koordinatensystem auf LV95 umgestellt
+!!===================================================================================== 
+
+!!@ technicalContact = are@bd.zh.ch
+!!@ furtherInformation = http://www.bd.zh.ch
+!!@ IDGeoIV = "190"
+
+MODEL Gewaesserraum_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07-31"  =
+
+   IMPORTS UNQUALIFIED INTERLIS;
+   IMPORTS UNQUALIFIED Units;
+   IMPORTS CoordSys;
+   IMPORTS UNQUALIFIED GeometryCHLV95_V1;
+   IMPORTS UNQUALIFIED CHAdminCodes_V1;
+
+   REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
+      OBJECTS OF GeoCartesian2D: CHLV03
+      OBJECTS OF GeoHeight: SwissOrthometricAlt;
+
+
+   !! Model Domains
+   !!==============
+
+   DOMAIN
+
+      ZHPoint = COORD
+         2480000.000 .. 2850000.000 [m] {CHLV95[1]},
+         1070000.000 .. 1310000.000 [m] {CHLV95[2]},
+         ROTATION 2 -> 1;
+
+      ZHSurface = SURFACE WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+
+      RechtsstatusObjekt = (
+         inKraft,
+         laufendeAenderung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren
+         ),
+         Aufhebung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren
+         )
+      );
+
+      JaNein = (
+         ja,
+         nein
+      );
+
+
+   !! Rechtsvorschriften
+   !!===================
+
+   TOPIC Rechtsvorschriften =
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         DokumentArt = (
+           Rechtsvorschrift,
+           GesetzlicheGrundlage,
+         Hinweis
+         );
+
+         DokumentRechtsstatus = (
+            inKraft,
+            laufendeAenderung,
+            Aufhebung,
+            provisorisch
+         );
+
+
+      !! Classes
+      !!--------
+
+      CLASS RV_Dokument =
+         Art : MANDATORY DokumentArt;
+         Titel : MANDATORY TEXT*80;
+         OffiziellerTitel : TEXT*2400;
+         Abkuerzung : TEXT*10;
+         OffizielleNr : TEXT*20;
+         Kanton : CHAdminCodes_V1.CHCantonCode;
+         Gemeinde : CHAdminCodes_V1.CHMunicipalityCode;
+         publiziertAb : MANDATORY XMLDate;
+         Rechtsstatus : MANDATORY DokumentRechtsstatus;
+         TextImWeb : URI;
+         Dokument : BLACKBOX BINARY;
+         Bemerkungen : MTEXT*2400;
+         Genehmigungsdatum : XMLDate;
+      END RV_Dokument;
+
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION RV_HinweisWeitereDokumente =
+         Ursprung -- {0..*} RV_Dokument;
+         Hinweis -- {0..*} RV_Dokument;
+      END RV_HinweisWeitereDokumente;
+
+   END Rechtsvorschriften;
+
+
+   !! Grundstrukturen
+   !!================
+
+   TOPIC Grundstrukturen (ABSTRACT) =
+      DEPENDS ON Gewaesserraum_ZH_V4.Rechtsvorschriften;
+
+      !! Classes Allgemein
+      !!------------------
+
+      CLASS Basis_Objekt (ABSTRACT)  =
+      END Basis_Objekt;
+
+
+      !! Associations konkret
+      !!---------------------
+      !! Beziehungen:
+      !! Objekt > RV_Dokument
+
+      ASSOCIATION Bez_Dokument_Objekt =
+         Dokument (EXTERNAL) -- {0..*} Gewaesserraum_ZH_V4.Rechtsvorschriften.RV_Dokument;
+         Objekt -- {0..*} Basis_Objekt;
+      END Bez_Dokument_Objekt;
+
+   END Grundstrukturen;
+
+
+   !! Gewaesserraum
+   !!==============
+
+   TOPIC Gewaesserraum EXTENDS Gewaesserraum_ZH_V4.Grundstrukturen =
+      DEPENDS ON Gewaesserraum_ZH_V4.Rechtsvorschriften;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         GWR_Verfahrensart = (
+            nutzungsplanerisches_Verfahren,
+            vereinfachtes_Verfahren,
+            Verfahren_zur_Festsetzung_von_Wasserbauprojekten
+         );
+
+
+         GWR_RechtsstatusObjekt = (
+            inKraft,
+            laufendeAenderung (
+               Vorpruefung,
+               oeffentliche_Auflage,
+               Festsetzung,
+               Rechtsmittelverfahren
+            ),
+            Aufhebung (
+               Vorpruefung,
+               oeffentliche_Auflage,
+               Festsetzung,
+               Rechtsmittelverfahren
+            )
+         );
+
+         GWR_BehoerdeFestsetzung = (
+            RR,
+            BD,
+            AWEL
+         );
+
+
+         GWR_BehoerdeinKraftsetzung = (
+            RR,
+            BD,
+            AWEL
+         );
+
+         GWR_Gewaesserart = (
+            fliessend,
+            stehend
+         );
+
+      !! Classes
+      !!--------
+      CLASS GWR_Verfahren =
+         Art : MANDATORY GWR_Verfahrensart;
+      END GWR_Verfahren;
+
+      CLASS GWR_Beschluss
+            EXTENDS Gewaesserraum_ZH_V4.Grundstrukturen.Basis_Objekt =
+
+         BFS_Nummer : MANDATORY CHMunicipalityCode;
+         Gemeinde_Name : TEXT*80;
+
+         publiziertAb : MANDATORY XMLDate;
+         Rechtsstatus : MANDATORY GWR_RechtsstatusObjekt;
+         Bemerkungen : MTEXT*200;
+
+         Identifikator: UUIDOID;
+
+         Vorpruefung_Behoerde: TEXT*80;
+         Vorpruefung_Datum : XMLDate;
+         Vorpruefung_Nummer: TEXT*80;
+ 
+         OeffentlicheAuflage_Behoerde: TEXT*80;
+         OeffentlicheAuflage_Datum : XMLDate;
+         OeffentlicheAuflage_Nummer: TEXT*80;
+ 
+         Festsetzung_Behoerde : GWR_BehoerdeFestsetzung;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde : GWR_BehoerdeinKraftsetzung;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         Routennummer : MANDATORY 0 .. 9999999;
+         Gewaesser_Art: MANDATORY GWR_Gewaesserart; 
+         Verzicht_Gewaesserraumfestlegung : MANDATORY JaNein;
+
+      UNIQUE
+         Identifikator;
+
+      END GWR_Beschluss;
+
+
+      CLASS GWR_Geometrie =
+
+         Geometrie : MANDATORY ZHSurface;
+
+      END GWR_Geometrie;
+
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION Bez_GWR_Verfahren_Beschluss =
+         Verfahren -- {1} GWR_Verfahren;
+         Beschluss -- {0..*} GWR_Beschluss;
+      END Bez_GWR_Verfahren_Beschluss;
+
+      ASSOCIATION Bez_GWR_Beschluss_Geometrie =
+         Beschluss -- {1} GWR_Beschluss;
+         Geometrie -- {0..*} GWR_Geometrie;
+      END Bez_GWR_Beschluss_Geometrie;
+
+      ASSOCIATION Bez_GWR_Dokument_Verfahren =
+         Dokument (EXTERNAL) -- {0..*} Gewaesserraum_ZH_V4.Rechtsvorschriften.RV_Dokument;
+         Objekt -- {0..*} GWR_Verfahren;
+      END Bez_GWR_Dokument_Verfahren;
+
+   END Gewaesserraum;
+
+
+   !! Projekte
+   !!=========
+
+   TOPIC Projekte =
+      DEPENDS ON Gewaesserraum_ZH_V4.Gewaesserraum;
+
+      CLASS Projekt =
+
+         Nummer : MANDATORY TEXT*80;
+         Bewirtschafter : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+         Projektzustand : RechtsstatusObjekt;
+         DatumLetztePublikation : XMLDate;
+
+      UNIQUE
+         Nummer;
+
+      END Projekt;
+
+      CLASS Projekt_Perimeter =
+
+         Geometrie : MANDATORY ZHSurface;
+
+      END Projekt_Perimeter;
+
+      CLASS Variante =
+
+         Nummer : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+
+      END Variante;
+
+
+      ASSOCIATION Bez_Projekt_Perimeter =
+
+         ProjektRef -- {1} Projekt;
+         PerimeterRef -<> {0..*}    Projekt_Perimeter;
+
+      END Bez_Projekt_Perimeter;
+
+      ASSOCIATION Bez_Projekt_Variante =
+
+         ProjektRef -- {1} Projekt;
+         VarianteRef -<> {0..*} Variante;
+
+      END Bez_Projekt_Variante;
+
+      ASSOCIATION Ausschluss =
+
+         Variante_A_Ref -- {1..*}    Variante;
+         Variante_B_Ref -- {1..*}    Variante;
+
+      END Ausschluss;
+
+      ASSOCIATION Bez_Projekt_Objekt =
+
+         ObjektProjektRef -- {0..*} Projekt;
+         ObjektVarianteRef -- {0..1} Variante;
+
+         ObjektRef (EXTERNAL) -<> {0..*}   Gewaesserraum_ZH_V4.Gewaesserraum.GWR_Beschluss;
+
+      END Bez_Projekt_Objekt;
+
+   END Projekte;
+
+
+   !! Transfer Metadaten
+   !!===================
+
+   TOPIC TransferMetadaten =
+
+      !! Classes
+      !!--------
+
+      CLASS Amt =
+         Name :           MANDATORY TEXT*80;
+         Foederale_Stufe: MANDATORY (Bund, Kanton, Gemeinde);
+         BFS_Nummer:      CHAdminCodes_V1.CHMunicipalityCode; !! Nur falls Foederale_Stufe = Gemeinde
+         Kuerzel:         CHAdminCodes_V1.CHCantonCode;  !! Nur falls Foederale_Stufe = Bund oder Kanton
+         AmtImWeb:        URI;
+         UID:             TEXT*20;
+         Zeile1:          TEXT*255;
+         Zeile2:          TEXT*255;
+         Strasse:         TEXT*60;
+         Hausnr:          TEXT*12;
+         PLZ:             1000..9999;
+         Ort:             TEXT*40;
+      END Amt;
+
+      CLASS Darstellungsdienst =
+         VerweisWMS : URI;
+         LegendeImWeb : URI;
+      END Darstellungsdienst;
+
+      CLASS Datenbestand =
+         BasketId : TEXT*80;
+         Stand : MANDATORY XMLDate;
+         Lieferdatum : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         weitereMetadaten : URI;
+      END Datenbestand;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION zustaendigeStelleDatenbestand =
+         zustaendigeStelle -- {1} Amt;
+         Datenbestand -<> {0..*} Datenbestand;
+      END zustaendigeStelleDatenbestand;
+
+      ASSOCIATION DarstellungsdienstDatenbestand =
+         Darstellungsdienst -- {1} Darstellungsdienst;
+         Datenbestand -<> {0..*} Datenbestand;
+      END DarstellungsdienstDatenbestand;
+
+   END TransferMetadaten;
+
+END Gewaesserraum_ZH_V4.
+
