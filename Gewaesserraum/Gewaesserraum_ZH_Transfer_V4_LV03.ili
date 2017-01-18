@@ -1,0 +1,457 @@
+!!===================================================================================== 
+!! Kanton Zuerich 
+!! Baudirektion Kanton Zuerich
+!! Amt fuer Raumentwicklung
+!! Abteilung Raumplanung
+!! Stampfenbachstrasse 14 / Postfach
+!! 8090 Zuerich
+!!
+!! www.bd.zh.ch
+!!
+!! Geobasisdatensatz Nr. 190  Gewaesserraum
+!!===================================================================================== 
+!! Revision History
+!! 2015.04.27/tg created
+!! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
+!! 2016-01-18/ns LV95
+!! 2016.18.12/ht Modellrevision 16/17, hauptsächlich infolge VDNP und IVHB
+!! 2017.01.17/pp Version LV03 
+!!===================================================================================== 
+!! Bemerkungen:
+!!
+!! - Modell Entstehung 
+!!
+!! Das Mastermodell ist das gleichnamige Modell in INTERLIS 2.
+!! Dieses INTERLIS-Modell lehnt sich an den INTERLIS-Modell-Export aus den implementierten 
+!! Datenbank-Modellen der Themen Nutzungsplanung, Grundwasser und Abstandslinien 
+!! für rechtsgueltige und projektierte Daten und der Zusammenfassung in ein INTERLIS-Modell.
+!! Dieses INTERLIS-Modell lehnt sich deshalb sehr an das implementierte Datenbank-Modell und 
+!! weniger an das Mastermodell in INTERLIS 2.
+!!
+!! - Projekte
+!!
+!! Projekte - Varianten - Ausschluss werden fuer projektierte Daten benoetigt.      
+!! Die INTERLIS-Modellierung entspricht dem implementierten Datenbank-Modell.
+!! Alle Tabellen fuer die rechtsgueltigen Daten haben eine entsprechende Tabelle
+!! für die projektierten Daten. Die Tabellen für rechtsgueltige und projektierte Daten
+!! sind weitgehend identisch.
+!!
+!! Zusätzlich beinhaltet jede Haupttabelle und Untertabelle der rechtsgueltigen Daten folgendes Attribut.
+!!    GID: OPTIONAL GIDTYPE;
+!!
+!! Zusätzlich beinhaltet jede Haupttabelle und Untertabelle der projektierten Daten folgendes Attribut.
+!!    RG_GID: OPTIONAL GIDTYPE;
+!! RG_GID des projektierten Objektes verweist auf das GID des rechtsgueltigen Objektes.
+!! RG_GID und GID sind Systemschluessel des Datenhaltungsystemes des Kantons.
+!!
+!! Zusätzlich beinhaltet jede Haupttabelle der projektierten Daten folgende Attribute.
+!!    ProjektRef : -> Projekt;  
+!!    VarianteRef : OPTIONAL -> Variante;
+!! 
+!! Projektierte Daten im Transferfile entsprechen dem zuletzt publizierten Stand.
+!!===================================================================================== 
+
+TRANSFER Gewaesserraum_ZH;
+
+!!* @Issuer http://oereb.zh.ch
+!!* @Version 2016-01-18
+
+MODEL Gewaesserraum_ZH_V4_LV03
+
+  DOMAIN
+
+    !! Domains Allgemein
+    !!==================
+
+    ZHPoint = COORD2
+      480000.000 70000.000
+      850000.000 310000.000;
+
+    ZHSurface = SURFACE WITH (STRAIGHTS, ARCS)
+      VERTEX COORD2
+        480000.000 70000.000
+        850000.000 310000.000
+      WITHOUT OVERLAPS > 0.001;
+
+    RechtsstatusObjekt = (
+      inKraft,
+      laufendeAenderung (
+        Vorpruefung,
+        oeffentliche_Auflage,
+        Festsetzung,
+        Genehmigung,
+        sistiert,
+        Rechtsmittelverfahren),
+      Aufhebung (
+        Vorpruefung,
+        oeffentliche_Auflage,
+        Festsetzung,
+        Genehmigung,
+        sistiert,
+        Rechtsmittelverfahren));
+
+    TextGroesse = 
+       (klein,
+        mittel,
+        gross);
+
+    DokumentArt = 
+       (Rechtsvorschrift,
+        GesetzlicheGrundlage,
+        Hinweis);
+
+    DokumentRechtsstatus = 
+       (inKraft,
+        laufendeAenderung,
+        Aufhebung,
+        provisorisch);
+
+    CHCantonCode = (ZH,BE,LU,UR,SZ,OW,NW,GL,ZG,FR,SO,BS,BL,SH,AR,AI,SG,
+                    GR,AG,TG,TI,VD,VS,NE,GE,JU);
+
+    CHMunicipalityCode = [1..9999];
+
+    URI = TEXT*256;
+
+    BLOB = TEXT*2400;
+
+    UUIDOID = TEXT*36;
+
+    Orientation = GRADS  0.00000 399.99999;
+
+    GIDTYPE = TEXT*17;
+
+    JaNein = (
+      ja,
+      nein);
+
+
+    !! Domains Gewaesserraum
+    !!======================
+
+    GWR_Verfahrensart =
+       (nutzungsplanerisches_Verfahren,
+        vereinfachtes_Verfahren,
+        Verfahren_zur_Festsetzung_von_Wasserbauprojekten);
+  
+    GWR_RechtsstatusObjekt =
+       (inKraft,
+        laufendeAenderung
+           (Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Rechtsmittelverfahren),
+        Aufhebung
+           (Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Rechtsmittelverfahren));
+
+    GWR_BehoerdeFestsetzung =
+       (RR,
+        BD,
+        AWEL);
+
+    GWR_BehoerdeinKraftsetzung =
+       (RR,
+        BD,
+        AWEL);
+
+    GWR_Gewaesserart =
+       (fliessend,
+        stehend);
+ 
+
+   !! Topic Gewaesserraum
+   !!====================  
+
+   TOPIC GWR =
+
+    !! Projekte
+    !!=========
+
+    TABLE Projekt =
+      Nummer : TEXT*80;
+      Bewirtschafter : TEXT*80;
+      Eroeffnungsdatum : DATE;
+      Projektzustand : OPTIONAL RechtsstatusObjekt;
+      DatumLetztePublikation : OPTIONAL DATE;
+    IDENT
+      Nummer;
+    END Projekt;
+
+    TABLE Projekt_Perimeter =
+      ProjektRef : ->Projekt;
+      Geometrie : ZHSurface;
+    NO IDENT
+    END Projekt_Perimeter;
+
+    TABLE Variante =
+      Nummer : TEXT*80;
+      Eroeffnungsdatum : DATE;
+      ProjektRef : ->Projekt;
+    IDENT
+      Nummer,ProjektRef;
+    END Variante;
+
+    TABLE Ausschluss =
+      Variante_A_Ref : ->Variante;
+      Variante_B_Ref : ->Variante;
+    NO IDENT
+    END Ausschluss;
+
+
+    !! Dokumente
+    !!==========
+
+    !! Tables beinhalten rechtsgueltige und projektierte Dokumente
+
+    TABLE RV_Dokument =
+      DocId: [0..999999];
+      Art : DokumentArt;
+      Titel : TEXT*80;
+      OffiziellerTitel : OPTIONAL TEXT*2400;
+      Abkuerzung : OPTIONAL TEXT*10;
+      OffizielleNr : OPTIONAL TEXT*20;
+      Kanton : OPTIONAL CHCantonCode;
+      Gemeinde : OPTIONAL CHMunicipalityCode;
+      publiziertAb : DATE;
+      Rechtsstatus : DokumentRechtsstatus;
+      TextImWeb : OPTIONAL URI;
+      Dokument : OPTIONAL BLOB;
+      Bemerkungen : OPTIONAL TEXT*2400;
+      Genehmigungsdatum : OPTIONAL DATE;
+    NO IDENT
+    END RV_Dokument;
+
+    TABLE RV_HinweisWeitereDokumente =
+      Ursprung : ->RV_Dokument; !! {1}
+      Hinweis : ->RV_Dokument; !! {1}
+    NO IDENT
+    END RV_HinweisWeitereDokumente;
+
+    !! Gewaesserraun
+    !!==============
+
+    !! Verfahren
+    !!----------
+
+    TABLE GWR_Verfahren =
+        Art : GWR_Verfahrensart;
+
+    NO IDENT
+    END GWR_Verfahren;
+      
+    TABLE Bez_RV_Doku_GWR_Verfahren =
+        Dokument: -> RV_Dokument;
+        Verfahren: -> GWR_Verfahren;
+
+    NO IDENT
+    END Bez_RV_Doku_GWR_Verfahren;
+
+    !! Beschluss rechtsgueltig
+    !!----------------------
+    TABLE GWR_Beschluss =
+        BFS_Nummer : CHMunicipalityCode;
+        Gemeinde_Name : OPTIONAL TEXT*80;
+
+        Rechtsstatus : GWR_RechtsstatusObjekt;
+        Bemerkungen : OPTIONAL TEXT*200;
+        Identifikator : OPTIONAL UUIDOID;
+
+        Vorpruefung_Behoerde : OPTIONAL TEXT*80;
+        Vorpruefung_Datum : OPTIONAL DATE;
+        Vorpruefung_Nummer : OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde : OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum : OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer : OPTIONAL TEXT*80;
+        Festsetzung_Behoerde : OPTIONAL GWR_BehoerdeFestsetzung;
+        Festsetzung_Datum : OPTIONAL DATE;
+        Festsetzung_Nummer : OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde : OPTIONAL GWR_BehoerdeinKraftsetzung;
+        inKraftsetzung_Datum : OPTIONAL DATE;
+        inKraftsetzung_Nummer : OPTIONAL TEXT*80;
+
+        Routennummer : [0 .. 9999999];
+        Gewaesser_Art : GWR_Gewaesserart;
+        Verzicht_Gewaesserraumfestlegung : JaNein;
+        Verfahrensart : -> GWR_Verfahren; 
+
+        GID: OPTIONAL GIDTYPE;
+
+    IDENT
+        Identifikator;
+
+    END GWR_Beschluss;
+
+    TABLE GWR_Geometrie =
+        Rechtsstatus : GWR_RechtsstatusObjekt;
+
+        Geometrie : ZHSurface;
+        Beschluss : ->GWR_Beschluss;
+
+        GID: OPTIONAL GIDTYPE;
+
+    NO IDENT
+    END GWR_Geometrie;
+
+    TABLE Bez_RV_Doku_GWR_Beschluss =
+        Dokument: -> RV_Dokument;
+        Objekt: -> GWR_Beschluss;
+
+        GID: OPTIONAL GIDTYPE;
+    NO IDENT
+    END Bez_RV_Doku_GWR_Beschluss;
+
+
+    !! Beschluss projektiert
+    !!--------------------
+
+    TABLE GWR_Beschluss_PROJ =
+        BFS_Nummer : CHMunicipalityCode;
+        Gemeinde_Name : OPTIONAL TEXT*80;
+
+        Rechtsstatus : GWR_RechtsstatusObjekt;
+        Bemerkungen : OPTIONAL TEXT*200;
+        Identifikator : OPTIONAL UUIDOID;
+
+        Vorpruefung_Behoerde : OPTIONAL TEXT*80;
+        Vorpruefung_Datum : OPTIONAL DATE;
+        Vorpruefung_Nummer : OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Behoerde : OPTIONAL TEXT*80;
+        OeffentlicheAuflage_Datum : OPTIONAL DATE;
+        OeffentlicheAuflage_Nummer : OPTIONAL TEXT*80;
+        Festsetzung_Behoerde : OPTIONAL GWR_BehoerdeFestsetzung;
+        Festsetzung_Datum : OPTIONAL DATE;
+        Festsetzung_Nummer : OPTIONAL TEXT*80;
+        inKraftsetzung_Behoerde : OPTIONAL GWR_BehoerdeinKraftsetzung;
+        inKraftsetzung_Datum : OPTIONAL DATE;
+        inKraftsetzung_Nummer : OPTIONAL TEXT*80;
+
+        Routennummer : [0 .. 9999999];
+        Gewaesser_Art : GWR_Gewaesserart;
+        Verzicht_Gewaesserraumfestlegung : JaNein;
+        Verfahrensart : -> GWR_Verfahren; 
+
+        RG_GID: OPTIONAL GIDTYPE;
+        ProjektRef: -> Projekt;
+        VarianteRef: OPTIONAL -> Variante;
+    NO IDENT
+    END GWR_Beschluss_PROJ;
+
+    TABLE GWR_Geometrie_PROJ =
+        Rechtsstatus : GWR_RechtsstatusObjekt;
+
+        Geometrie : ZHSurface;
+        Beschluss : ->GWR_Beschluss_PROJ;
+
+        RG_GID: OPTIONAL GIDTYPE;
+
+    NO IDENT
+    END GWR_Geometrie_PROJ;
+
+    TABLE Bez_RV_Doku_GWR_Beschluss_PROJ =
+        Dokument: -> RV_Dokument;
+        Objekt: -> GWR_Beschluss_PROJ;
+
+        RG_GID: OPTIONAL GIDTYPE;
+    NO IDENT
+    END Bez_RV_Doku_GWR_Beschluss_PROJ;
+
+
+    !! Aenderung
+    !!----------
+    !! Zur Protokollierung der Aenderungen von Objekten
+    !! Namen von der implementierten Datenbank (zum Teil nicht duchgaengig)
+
+    !! Aenderung
+    !!----------
+
+    TABLE GWR_Aenderung =
+        Beschlussname: TEXT*80;
+        Beschlussnummer: TEXT*80;
+        Beschlussbehoerde: TEXT*80;
+        Beschlussdatum: TEXT*80;
+        Geschaeftsnummer: OPTIONAL TEXT*80;
+    NO IDENT
+    END GWR_Aenderung;
+
+    TABLE Bez_RV_Doku_GWR_Aenderung =
+        Dokument: -> RV_Dokument;
+        Aenderung: -> GWR_Aenderung;
+    NO IDENT
+    END Bez_RV_Doku_GWR_Aenderung;
+
+    !! Aenderung rechtsgueltig
+    !!------------------------
+
+    TABLE Bez_GWR_Aenderung_Objekt =
+        Aenderung: -> GWR_Aenderung;
+        Objekt_GWR_F: OPTIONAL -> GWR_Beschluss;
+    NO IDENT
+    END Bez_GWR_Aenderung_Objekt;
+
+    !! Aenderung projektiert
+    !!----------------------
+
+    TABLE Bez_GWR_Aenderung_Objekt_PROJ =
+        Aenderung: -> GWR_Aenderung;
+        Objekt_GWR_F: OPTIONAL -> GWR_Beschluss_PROJ;
+    NO IDENT
+    END Bez_GWR_Aenderung_Objekt_PROJ;
+
+  END GWR.
+
+
+  !! Topic Transfer Metadaten
+  !!=========================
+
+  TOPIC TransferMetadaten =
+
+    TABLE Darstellungsdienst =
+      VerweisWMS : OPTIONAL URI;
+      LegendeImWeb : OPTIONAL URI;
+    NO IDENT
+    END Darstellungsdienst;
+
+    TABLE Amt =
+      Name :           TEXT*80;
+      Foederale_Stufe: (Bund, Kanton, Gemeinde);
+      BFS_Nummer:      OPTIONAL CHMunicipalityCode; !! Nur falls Foederale_Stufe = Gemeinde
+      Kuerzel:         OPTIONAL CHCantonCode;  !! Nur falls Foederale_Stufe = Bund oder Kanton
+      AmtImWeb:        OPTIONAL URI;
+      UID:             OPTIONAL TEXT*20;
+      Zeile1:          OPTIONAL TEXT*255;
+      Zeile2:          OPTIONAL TEXT*255;
+      Strasse:         OPTIONAL TEXT*60;
+      Hausnr:          OPTIONAL TEXT*12;
+      PLZ:             OPTIONAL [1000..9999];
+      Ort:             OPTIONAL TEXT*40;
+    NO IDENT
+    END Amt;
+
+    TABLE Datenbestand =
+      BasketId : OPTIONAL TEXT*2400;
+      Stand : DATE;
+      Lieferdatum : OPTIONAL DATE;
+      Bemerkungen : OPTIONAL TEXT*2400;
+      weitereMetadaten : OPTIONAL URI;
+      Darstellungsdienst : ->Darstellungsdienst; !! {0..*}
+      zustaendigeStelle : ->Amt; !! {0..*}
+    NO IDENT
+    END Datenbestand;
+
+  END TransferMetadaten.
+
+END Gewaesserraum_ZH_V4_LV03.
+
+FORMAT
+  FREE;
+
+CODE
+    BLANK = 0x7e, UNDEFINED = DEFAULT, CONTINUE = DEFAULT;
+    TID = ANY;
+END.
+
+
