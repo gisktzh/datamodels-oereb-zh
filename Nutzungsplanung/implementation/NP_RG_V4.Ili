@@ -255,7 +255,7 @@ TOPIC NP =
     END Gemeinde;
 
     TABLE GN_Typ_Kanton =
-        Bezeichnung: TEXT*80;
+        Bezeichnung: TEXT*100;
         Abkuerzung: OPTIONAL TEXT*12;
         Beschreibung: OPTIONAL TEXT*2400;
         Code: GN_Codes_Kanton;
