@@ -28,6 +28,8 @@ INTERLIS 2.3;
 !!               GWS_Areal_BehoerdeFestsetzung erweitert
 !!               GWS_Areal Attribut BFS_Nummer angefügt
 !!               GWS_Zone_BehoerdeFestsetzung erweitert
+!! 2017.03.21/ns Modellrevision 16/17: Angleichung der Reihenfolge der Status in
+!!                RechtsstatusObjekt und GWS_Zone_RechtsstatusObjekt
 !!===================================================================================== 
 
 !!@ technicalContact = are@bd.zh.ch
@@ -422,8 +424,8 @@ MODEL Grundwasser_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07-31
             inKraft,
             laufendeAenderung (
                Vorpruefung,
-               Festsetzung,
                oeffentliche_Auflage,
+               Festsetzung,
                Genehmigung,
                Rechtsmittelverfahren
             ),

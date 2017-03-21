@@ -28,6 +28,8 @@ INTERLIS 2.3;
 !!               GA_Linie, WA_Linie um die Attribute UeberweisungLegislative_Nummer, UeberweisungLegislative_Datum erweitert
 !!               RechtsstatusObjekt erweitert (suspendiert)
 !!               BL_Linien_Punkt erweitert um das Attribut Typ = (Zwischenpunkt,Endpunkt)
+!! 2017.03.21/ns Modellrevision 16/17: Art_Waldgrenze eingefügt infolge neuer Version
+!!               MGDM Nutzungsplanung vom Februar 2017
 !!===================================================================================== 
 
 !!@ technicalContact = are@bd.zh.ch
@@ -735,6 +737,10 @@ MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07
             statisch
          );
 
+         Art_Waldgrenze = (
+           in_Bauzonen,
+           ausserhalb_Bauzonen
+         );
 
       !! Waldgrenzen dynamisch (WaG 10)
       !!-------------------------------
@@ -868,6 +874,7 @@ MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07
 
          Rechtsstatus : MANDATORY RechtsstatusObjekt;
          Wirksamkeit : Wirksamkeit;
+         Art : Art_Waldgrenze;
          Geometrie : MANDATORY ZHDirectedLine;
 
       MANDATORY CONSTRAINT

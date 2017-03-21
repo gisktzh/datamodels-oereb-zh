@@ -32,9 +32,11 @@
 !!               Definition von Verbindlichkeit entfernt da sie nicht verwendet wurde
 !!               Aufzählwert Behoerde neu mit Abkürzungen (RR,BD,VD...
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
-!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
+!! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefuegt.
 !! 2016.01.18/ns LV95
-!! 2016.18.12/ht Modellrevision 16/17, hauptsächlich infolge VDNP und IVHB 
+!! 2016.18.12/ht Modellrevision 16/17, hauptsaechlich infolge VDNP und IVHB
+!! 2017.03.21/ns Modellrevision 16/17: Art_Waldgrenze eingefuegt infolge neuer Version
+!!               MGDM Nutzungsplanung vom Februar 2017
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -292,6 +294,10 @@ MODEL Abstandslinien_ZH_V4
     BL_Linien_Punkt_Typ = (
       Zwischenpunkt, 
       Endpunkt);
+
+    Art_Waldgrenze = (
+      in_Bauzonen,
+      ausserhalb_Bauzonen);
 
   !! Topic Abstandslinien
   !!=====================
@@ -1062,6 +1068,7 @@ MODEL Abstandslinien_ZH_V4
       publiziertAb : OPTIONAL DATE;
       Wirksamkeit : OPTIONAL Wirksamkeit;
       Typ : ->WG_statisch_Typ; !! {0..*}
+      Art : OPTIONAL Art_Waldgrenze;
       Geometrie : ZHDirectedLine;
 
       RG_GID: OPTIONAL GIDTYPE;
@@ -1115,6 +1122,7 @@ MODEL Abstandslinien_ZH_V4
       publiziertAb : OPTIONAL DATE;
       Wirksamkeit : OPTIONAL Wirksamkeit;
       Typ : ->WG_statisch_Typ; !! {0..*}
+      Art : OPTIONAL Art_Waldgrenze;
       Geometrie : ZHDirectedLine;
 
       RG_GID: OPTIONAL GIDTYPE;

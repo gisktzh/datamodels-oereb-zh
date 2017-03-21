@@ -36,6 +36,8 @@
 !! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
 !! 2016.01.18/ns LV95
 !! 2016.18.12/ht Modellrevision 16/17, hauptsächlich infolge VDNP und IVHB
+!! 2017.03.21/ns Modellrevision 16/17: Angleichung der Reihenfolge der Status in
+!!                RechtsstatusObjekt und GWS_Zone_RechtsstatusObjekt
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -223,8 +225,8 @@ MODEL Grundwasser_ZH_V4
        (inKraft,
         laufendeAenderung
            (Vorpruefung,
-            Festsetzung,
             oeffentliche_Auflage,
+            Festsetzung,
             Genehmigung,
             Rechtsmittelverfahren),
         provisorisch,
