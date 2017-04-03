@@ -36,7 +36,7 @@ INTERLIS 2.3;
 !!@ furtherInformation = http://www.bd.zh.ch
 !!@ IDGeoIV = "130,131,132"
 
-MODEL Grundwasser_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07-31"  =
+MODEL Grundwasser_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-03-21"  =
 
    IMPORTS UNQUALIFIED INTERLIS;
    IMPORTS UNQUALIFIED Units;
@@ -45,7 +45,7 @@ MODEL Grundwasser_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07-31
    IMPORTS UNQUALIFIED CHAdminCodes_V1;
 
    REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
-      OBJECTS OF GeoCartesian2D: CHLV03
+      OBJECTS OF GeoCartesian2D: CHLV95
       OBJECTS OF GeoHeight: SwissOrthometricAlt;
 
 
@@ -112,11 +112,13 @@ MODEL Grundwasser_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07-31
             provisorisch
          );
 
+         DokumentID = 0 .. 999999;
 
       !! Classes
       !!--------
 
       CLASS RV_Dokument =
+         DocId : MANDATORY DokumentID;
          Art : MANDATORY DokumentArt;
          Titel : MANDATORY TEXT*80;
          OffiziellerTitel : TEXT*2400;

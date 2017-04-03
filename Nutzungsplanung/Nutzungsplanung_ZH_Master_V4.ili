@@ -32,7 +32,7 @@ INTERLIS 2.3;
 !!@ furtherInformation = http://www.bd.zh.ch
 !!@ IDGeoIV = "73,145"
 
-CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-08-20"  =
+CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-03-21"  =
 
    IMPORTS UNQUALIFIED INTERLIS;
    IMPORTS UNQUALIFIED Units;
@@ -41,7 +41,7 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
    IMPORTS UNQUALIFIED CHAdminCodes_V1;
 
    REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
-      OBJECTS OF GeoCartesian2D: CHLV03
+      OBJECTS OF GeoCartesian2D: CHLV95
       OBJECTS OF GeoHeight: SwissOrthometricAlt;
 
 
@@ -143,11 +143,13 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
             provisorisch
          );
 
+         DokumentID = 0 .. 999999;
 
       !! Classes
       !!--------
 
       CLASS RV_Dokument =
+         DocId : MANDATORY DokumentID;
          Art : MANDATORY DokumentArt;
          Titel : MANDATORY TEXT*80;
          OffiziellerTitel : TEXT*2400;
@@ -376,7 +378,12 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
          Freiflaechenziffer   = 0 .. 99;
          Gebaeudehoehe        = 0.0 .. 999.9;
          Firsthoehe           = 0.0 .. 9.9;
-   
+         Fassadenhoehe        = 0.0 .. 999.9;
+         Attikageschosse      = 0 .. 9;
+         Gruenflaechenziffer  = 0 .. 99;
+         Gruenflaechenziffer  = 0 .. 99;
+
+		 
          !! Codes Bund als Information 
          !! Code: C<bb>
          !! <bb> 2-stellig int eindeutiger Code Bund
@@ -492,9 +499,9 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
          Gewerbeanteil_Min: Prozent;
          Gewerbeanteil_Max: Prozent;
          Innenliegende_Freihaltezone: JaNein;
-         Fassadenhoehe: 0.0..999.9;
-         Attikageschosse: 0..9;
-         Gruenflaechenziffer: 0..99;
+         Fassadenhoehe: Fassadenhoehe;
+         Attikageschosse: Attikageschosse;
+         Gruenflaechenziffer: Gruenflaechenziffer;
          Revisionsart: RevisionsartT;
          Geometrie : ZHArea;
 

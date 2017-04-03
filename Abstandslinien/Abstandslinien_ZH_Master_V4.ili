@@ -36,7 +36,7 @@ INTERLIS 2.3;
 !!@ furtherInformation = http://www.bd.zh.ch
 !!@ IDGeoIV = "42-ZH,44-ZH,45-ZH,157,159"
 
-MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07-31"  =
+MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-03-21"  =
 
    IMPORTS UNQUALIFIED INTERLIS;
    IMPORTS UNQUALIFIED Units;
@@ -45,7 +45,7 @@ MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07
    IMPORTS UNQUALIFIED CHAdminCodes_V1;
 
    REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
-      OBJECTS OF GeoCartesian2D: CHLV03
+      OBJECTS OF GeoCartesian2D: CHLV95
       OBJECTS OF GeoHeight: SwissOrthometricAlt;
 
 
@@ -140,11 +140,13 @@ MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07
             provisorisch
          );
 
+         DokumentID = 0 .. 999999;
 
       !! Classes
       !!--------
 
       CLASS RV_Dokument =
+         DocId : MANDATORY DokumentID;
          Art : MANDATORY DokumentArt;
          Titel : MANDATORY TEXT*80;
          OffiziellerTitel : TEXT*2400;
@@ -323,6 +325,10 @@ MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07
             andere
          );
 
+         BL_Linien_Punkt_Typ = (
+            Zwischenpunkt, 
+            Endpunkt
+         );
 
       !! Classes
       !!--------
@@ -428,7 +434,7 @@ MODEL Abstandslinien_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2015-07
       CLASS BL_Linien_Punkt
             EXTENDS Abstandslinien_ZH_V4.Linien_Punkt =
          Code : BL_Codes;
-         Typ: (Zwischenpunkt,Endpunkt);
+         Typ : BL_Linien_Punkt_Typ;
       END BL_Linien_Punkt;
 
       !! Associations
