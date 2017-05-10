@@ -17,6 +17,7 @@
 !! 2016-01-18/ns LV95
 !! 2016.18.12/ht Modellrevision 16/17, hauptsächlich infolge VDNP und IVHB
 !! 2017.01.17/pp Version LV03 
+!! 2017.05.10/ns Entität "Aenderung" entfernt
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -358,48 +359,6 @@ MODEL Gewaesserraum_ZH_V4_LV03
         RG_GID: OPTIONAL GIDTYPE;
     NO IDENT
     END Bez_RV_Doku_GWR_Beschluss_PROJ;
-
-
-    !! Aenderung
-    !!----------
-    !! Zur Protokollierung der Aenderungen von Objekten
-    !! Namen von der implementierten Datenbank (zum Teil nicht duchgaengig)
-
-    !! Aenderung
-    !!----------
-
-    TABLE GWR_Aenderung =
-        Beschlussname: TEXT*80;
-        Beschlussnummer: TEXT*80;
-        Beschlussbehoerde: TEXT*80;
-        Beschlussdatum: TEXT*80;
-        Geschaeftsnummer: OPTIONAL TEXT*80;
-    NO IDENT
-    END GWR_Aenderung;
-
-    TABLE Bez_RV_Doku_GWR_Aenderung =
-        Dokument: -> RV_Dokument;
-        Aenderung: -> GWR_Aenderung;
-    NO IDENT
-    END Bez_RV_Doku_GWR_Aenderung;
-
-    !! Aenderung rechtsgueltig
-    !!------------------------
-
-    TABLE Bez_GWR_Aenderung_Objekt =
-        Aenderung: -> GWR_Aenderung;
-        Objekt_GWR_F: OPTIONAL -> GWR_Beschluss;
-    NO IDENT
-    END Bez_GWR_Aenderung_Objekt;
-
-    !! Aenderung projektiert
-    !!----------------------
-
-    TABLE Bez_GWR_Aenderung_Objekt_PROJ =
-        Aenderung: -> GWR_Aenderung;
-        Objekt_GWR_F: OPTIONAL -> GWR_Beschluss_PROJ;
-    NO IDENT
-    END Bez_GWR_Aenderung_Objekt_PROJ;
 
   END GWR.
 
