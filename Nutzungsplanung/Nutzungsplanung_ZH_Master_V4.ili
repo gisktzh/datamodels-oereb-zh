@@ -381,7 +381,6 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
          Fassadenhoehe        = 0.0 .. 999.9;
          Attikageschosse      = 0 .. 9;
          Gruenflaechenziffer  = 0 .. 99;
-         Gruenflaechenziffer  = 0 .. 99;
 
 		 
          !! Codes Bund als Information 
@@ -461,6 +460,7 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
       CLASS GN_Typ_Kanton 
             EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Kanton =
 
+		 Bezeichnung (EXTENDED): MANDATORY TEXT*100;										   
          Code : MANDATORY GN_Codes_Kanton;
 
       UNIQUE
@@ -692,13 +692,6 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
             EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Gemeinde =
          Verbindlichkeit : MANDATORY Verbindlichkeit;
          Code : MANDATORY TEXT*7; !! C<bb><kk><gg>
-         
-      MANDATORY CONSTRAINT
-         !! wenn abschliessende       Aufzaehlung Code_Auswahl != C6907xx -> Code = Code_Auswahl
-         !! wenn nicht abschliessende Aufzaehlung Code_Auswahl == C6907xx -> Code muss mit C6907 anfangen
-         (Code_Auswahl != #C6907xx) AND (Code == Code_Auswahl)
-         OR
-         (Code_Auswahl == #C6907xx) AND (isPrefix(#C6907,Code));
 
       END UL_Flaeche_Typ_Gemeinde;
 
@@ -762,22 +755,6 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
          Flaeche -<#> {1} UL_Flaeche;
          Bereich -- {0..*} UL_Bereich;
 
-      MANDATORY CONSTRAINT
-         !! UL_Bereich nur f?r bestimmte UL_Flaeche
-         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610101)
-         OR
-         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610102)
-         OR
-         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610201)
-         OR
-         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C610301)
-         OR
-         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C690401)
-         OR
-         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C690501)
-         OR
-         (Flaeche->Typ_Gemeinde->Code_Auswahl == #C6907xx);
-
       END Bez_UL_Flaeche_Bereich;
 
       ASSOCIATION Bez_UL_Flaeche_Text =
@@ -812,13 +789,6 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
 
          Verbindlichkeit : MANDATORY Verbindlichkeit;
          Code : MANDATORY TEXT*7; !! C<bb><kk><gg>
-         
-      MANDATORY CONSTRAINT
-         !! wenn abschliessende       Aufzaehlung Code_Auswahl != C7901xx -> Code = Code_Auswahl
-         !! wenn nicht abschliessende Aufzaehlung Code_Auswahl == C7901xx -> Code muss mit C7901 anfangen
-         (Code_Auswahl != #C7901xx) AND (Code == Code_Auswahl)
-         OR
-         (Code_Auswahl == #C7901xx) AND (isPrefix(#C7901,Code));
 
       END UL_Linie_Typ_Gemeinde;
 
@@ -895,13 +865,6 @@ CONTRACTED MODEL Nutzungsplanung_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERS
             EXTENDS Nutzungsplanung_ZH_V4.Grundstrukturen.NP_Typ_Gemeinde =
 
          Code : MANDATORY TEXT*7; !! C<bb><kk><gg>
-         
-      MANDATORY CONSTRAINT
-         !! wenn abschliessende       Aufzaehlung Code_Auswahl != C8901xx -> Code = Code_Auswahl
-         !! wenn nicht abschliessende Aufzaehlung Code_Auswahl == C8901xx -> Code muss mit C8901 anfangen
-         (Code_Auswahl != #C8901xx) AND (Code == Code_Auswahl)
-         OR
-         (Code_Auswahl == #C8901xx) AND (isPrefix(#C8901,Code));
 
       END UL_Punkt_Typ_Gemeinde;
 
