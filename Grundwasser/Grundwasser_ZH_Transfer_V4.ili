@@ -237,7 +237,8 @@ MODEL Grundwasser_ZH_V4
 
     GWS_Zone_BehoerdeFestsetzung =
        (Stadtrat,
-        Gemeinderat);
+        Gemeinderat,
+		BD);
 
     GWS_Zone_BehoerdeGenehmigung =
        (RR,
