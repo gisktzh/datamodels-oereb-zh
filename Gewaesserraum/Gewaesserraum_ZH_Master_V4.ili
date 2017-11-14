@@ -17,13 +17,14 @@ INTERLIS 2.3;
 !! 2015.07.31/tg Nachfuehrung und Kontrolle
 !! 2016.12.31/ht Tabelle Amt erweitert
 !!               Koordinatensystem auf LV95 umgestellt
+!! 2017.11.14/ns Gewässernummer anstatt Routennummer, Rechtsstatus für GWR_Geometrie
 !!===================================================================================== 
 
 !!@ technicalContact = are@bd.zh.ch
 !!@ furtherInformation = http://www.bd.zh.ch
 !!@ IDGeoIV = "190"
 
-MODEL Gewaesserraum_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-03-21"  =
+MODEL Gewaesserraum_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-11-14"  =
 
    IMPORTS UNQUALIFIED INTERLIS;
    IMPORTS UNQUALIFIED Units;
@@ -87,7 +88,7 @@ MODEL Gewaesserraum_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-03-
          DokumentArt = (
            Rechtsvorschrift,
            GesetzlicheGrundlage,
-         Hinweis
+           Hinweis
          );
 
          DokumentRechtsstatus = (
@@ -243,7 +244,7 @@ MODEL Gewaesserraum_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-03-
          inKraftsetzung_Datum : XMLDate;
          inKraftsetzung_Nummer : TEXT*80;
 
-         Routennummer : MANDATORY 0 .. 9999999;
+         Gewaessernummer : MANDATORY 1000.0 .. 9999.9;
          Gewaesser_Art: MANDATORY GWR_Gewaesserart; 
          Verzicht_Gewaesserraumfestlegung : MANDATORY JaNein;
 
@@ -255,6 +256,7 @@ MODEL Gewaesserraum_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-03-
 
       CLASS GWR_Geometrie =
 
+         Rechtsstatus : MANDATORY GWR_RechtsstatusObjekt;
          Geometrie : MANDATORY ZHSurface;
 
       END GWR_Geometrie;
