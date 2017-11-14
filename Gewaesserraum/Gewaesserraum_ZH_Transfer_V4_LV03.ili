@@ -16,8 +16,9 @@
 !! 2015.09.22/ht DocId in Tabelle RV_Dokument eingefügt.
 !! 2016-01-18/ns LV95
 !! 2016.18.12/ht Modellrevision 16/17, hauptsächlich infolge VDNP und IVHB
-!! 2017.01.17/pp Version LV03 
+!! 2017.01.17/pp Version LV03
 !! 2017.05.10/ns Entität "Aenderung" entfernt
+!! 2017.11.14/ns Gewässernummer anstatt Routennummer, publiziertAb eingefügt
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -56,7 +57,7 @@
 TRANSFER Gewaesserraum_ZH;
 
 !!* @Issuer http://oereb.zh.ch
-!!* @Version 2016-01-18
+!!* @Version 2017.11.14
 
 MODEL Gewaesserraum_ZH_V4_LV03
 
@@ -257,6 +258,7 @@ MODEL Gewaesserraum_ZH_V4_LV03
         BFS_Nummer : CHMunicipalityCode;
         Gemeinde_Name : OPTIONAL TEXT*80;
 
+        publiziertAb : DATE;
         Rechtsstatus : GWR_RechtsstatusObjekt;
         Bemerkungen : OPTIONAL TEXT*200;
         Identifikator : OPTIONAL UUIDOID;
@@ -274,7 +276,7 @@ MODEL Gewaesserraum_ZH_V4_LV03
         inKraftsetzung_Datum : OPTIONAL DATE;
         inKraftsetzung_Nummer : OPTIONAL TEXT*80;
 
-        Routennummer : [0 .. 9999999];
+        Gewaessernummer : OPTIONAL [1000.0 .. 9999.9];
         Gewaesser_Art : GWR_Gewaesserart;
         Verzicht_Gewaesserraumfestlegung : JaNein;
         Verfahrensart : -> GWR_Verfahren; 
@@ -313,6 +315,7 @@ MODEL Gewaesserraum_ZH_V4_LV03
         BFS_Nummer : CHMunicipalityCode;
         Gemeinde_Name : OPTIONAL TEXT*80;
 
+        publiziertAb : DATE;
         Rechtsstatus : GWR_RechtsstatusObjekt;
         Bemerkungen : OPTIONAL TEXT*200;
         Identifikator : OPTIONAL UUIDOID;
@@ -330,7 +333,7 @@ MODEL Gewaesserraum_ZH_V4_LV03
         inKraftsetzung_Datum : OPTIONAL DATE;
         inKraftsetzung_Nummer : OPTIONAL TEXT*80;
 
-        Routennummer : [0 .. 9999999];
+        Gewaessernummer OPTIONAL : [1000.0 .. 9999.9];
         Gewaesser_Art : GWR_Gewaesserart;
         Verzicht_Gewaesserraumfestlegung : JaNein;
         Verfahrensart : -> GWR_Verfahren; 
