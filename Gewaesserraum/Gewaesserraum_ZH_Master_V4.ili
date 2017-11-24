@@ -244,8 +244,8 @@ MODEL Gewaesserraum_ZH_V4 (de) AT "http://www.bd.zh.ch/models" VERSION "2017-11-
          inKraftsetzung_Datum : XMLDate;
          inKraftsetzung_Nummer : TEXT*80;
 
-         Gewaessernummer : MANDATORY 1000.0 .. 9999.9;
-         Gewaesser_Art: MANDATORY GWR_Gewaesserart; 
+         Gewaessernummer : 1000.0 .. 9999.9;
+         Gewaesser_Art : MANDATORY GWR_Gewaesserart; 
          Verzicht_Gewaesserraumfestlegung : MANDATORY JaNein;
 
       UNIQUE
