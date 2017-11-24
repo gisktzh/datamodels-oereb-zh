@@ -333,7 +333,7 @@ MODEL Gewaesserraum_ZH_V4_LV03
         inKraftsetzung_Datum : OPTIONAL DATE;
         inKraftsetzung_Nummer : OPTIONAL TEXT*80;
 
-        Gewaessernummer OPTIONAL : [1000.0 .. 9999.9];
+        Gewaessernummer : OPTIONAL [1000.0 .. 9999.9];
         Gewaesser_Art : GWR_Gewaesserart;
         Verzicht_Gewaesserraumfestlegung : JaNein;
         Verfahrensart : -> GWR_Verfahren; 
