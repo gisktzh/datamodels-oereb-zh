@@ -1,0 +1,1018 @@
+INTERLIS 2.3;
+
+!!===================================================================================== 
+!! Kanton Zuerich 
+!! Baudirektion Kanton Zuerich
+!! Amt fuer Raumentwicklung
+!! Abteilung Raumplanung
+!! Stampfenbachstrasse 14 / Postfach
+!! 8090 Zuerich
+!!
+!! www.bd.zh.ch
+!!
+!! Geobasisdatensatz Nr. 42-ZH   Gewaesserabstandslinien (Gemeinde)
+!! Geobasisdatensatz Nr. 44-ZH   Kantonale Baulinien (Kanton)
+!! Geobasisdatensatz Nr. 45-ZH   Kommunale Baulinien (Gemeinde)
+!! Geobasisdatensatz Nr. 157     Waldgrenzen in Bauzonen (Kanton)
+!! Geobasisdatensatz Nr. 159     Waldabstandslinien (Gemeinde)
+!!===================================================================================== 
+!! Revision History
+!! 2013.08.26/tg
+!! 2013.09.09/tg
+!! 2013.10.28/ht
+!! 2013.11.28/gb
+!! 2014.04.11/tg Anpassungen fuer implementiertes INTERLIS 1 Modell
+!! 2015.07.31/tg Nachfuehrung und Kontrolle
+!! 2016.12.31/ht Tabelle Amt erweitert
+!!               Koordinatensystem auf LV95 umgestellt
+!!               GA_Linie, WA_Linie um die Attribute UeberweisungLegislative_Nummer, UeberweisungLegislative_Datum erweitert
+!!               RechtsstatusObjekt erweitert (suspendiert)
+!!               BL_Linien_Punkt erweitert um das Attribut Typ = (Zwischenpunkt,Endpunkt)
+!! 2017.03.21/ns Modellrevision 16/17: Art_Waldgrenze eingefügt infolge neuer Version
+!!               MGDM Nutzungsplanung vom Februar 2017
+!! 2022.09.14/ht Anpassung an Revision ÖREB Rahmenmodell / MGDM, Version 5.0 
+!! 2022.09.16/mf RV_Dokument Attribute ergänzen
+!!===================================================================================== 
+
+!!@ technicalContact = are@bd.zh.ch
+!!@ furtherInformation = http://www.bd.zh.ch
+!! @ IDGeoIV = "42-ZH,44-ZH,45-ZH,157,159"
+
+MODEL Abstandslinien_ZH_V5 (de) AT "http://www.bd.zh.ch/models" VERSION "2022-09-19"  =
+
+   IMPORTS UNQUALIFIED INTERLIS;
+   IMPORTS UNQUALIFIED Units;
+   IMPORTS CoordSys;
+   IMPORTS UNQUALIFIED GeometryCHLV95_V1;
+   IMPORTS UNQUALIFIED CHAdminCodes_V1;
+
+   REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
+      OBJECTS OF GeoCartesian2D: CHLV95
+      OBJECTS OF GeoHeight: SwissOrthometricAlt;
+
+   !! Model Domains
+   !!==============
+
+   DOMAIN
+
+      ZHPoint = COORD
+         2480000.000 .. 2850000.000 [m] {CHLV95[1]},
+         1070000.000 .. 1310000.000 [m] {CHLV95[2]},
+         ROTATION 2 -> 1;
+
+      ZHSurface = SURFACE WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+      ZHArea = AREA WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+      ZHLine = POLYLINE WITH (STRAIGHTS, ARCS) VERTEX ZHPoint;
+      ZHDirectedLine EXTENDS ZHLine = DIRECTED POLYLINE;
+
+      RechtsstatusObjekt = (
+         inKraft,
+         laufendeAenderung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren,
+            suspendiert
+         ),
+         Aufhebung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Genehmigung,
+            sistiert,
+            Rechtsmittelverfahren,
+            suspendiert
+         )
+      );
+
+      JaNein = (
+         ja,
+         nein
+      );
+
+      TextGroesse = (
+         klein,
+         mittel,
+         gross
+      );
+
+      Wirksamkeit = (
+         links,
+         rechts
+      );
+
+
+    Verbindlichkeit = (
+      Nutzungsplanfestlegung,
+      orientierend,
+      hinweisend,
+      wegleitend
+      );
+
+      CLASS Linien_Punkt (ABSTRACT) =
+         BFS_Nummer : MANDATORY CHMunicipalityCode;
+         Gemeinde_Name : TEXT*80;
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Geometrie : MANDATORY ZHPoint;
+         Nummer : TEXT*12;
+         NumPos : Coord2;
+         NumOri : Orientation;   !! undefiniert = 100.0
+         NumHAli : HALIGNMENT;    !! undefiniert = Left
+         NumVAli : VALIGNMENT;    !! undefiniert = Bottom
+      UNIQUE
+         Geometrie;
+      END Linien_Punkt;
+
+   TOPIC Rechtsvorschriften =
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         DokumentTyp = (
+           Rechtsvorschrift,
+           GesetzlicheGrundlage,
+           Hinweis
+         );
+
+         DokumentRechtsstatus = (
+            inKraft,
+            laufendeAenderung,
+            Aufhebung,
+            provisorisch
+         );
+
+         DokumentID = 0 .. 999999;
+
+      !! Classes
+      !!--------
+
+      CLASS RV_Dokument =
+         DocId : MANDATORY DokumentID;
+         Typ : MANDATORY DokumentTyp;
+         Titel : MANDATORY TEXT*80;
+         OffiziellerTitel : TEXT*2400;
+         Abkuerzung : TEXT*10;
+         OffizielleNr : TEXT*20;
+         Kanton : CHAdminCodes_V1.CHCantonCode;
+         Gemeinde : CHAdminCodes_V1.CHMunicipalityCode;
+         publiziertAb : MANDATORY XMLDate;
+         publiziertBis : XMLDate;
+         Rechtsstatus : MANDATORY DokumentRechtsstatus;
+         TextImWeb : URI;
+         NurInGemeinde : CHMunicipalityCode;
+         AuszugIndex : -1000..1000;         
+         Dokument : BLACKBOX BINARY;
+         Bemerkungen : MTEXT*2400;
+         Genehmigungsdatum : XMLDate;
+      END RV_Dokument;
+
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION RV_HinweisWeitereDokumente =
+         Ursprung -- {0..*} RV_Dokument;
+         Hinweis -- {0..*} RV_Dokument;
+      END RV_HinweisWeitereDokumente;
+
+   END Rechtsvorschriften;
+
+   TOPIC Grundstrukturen (ABSTRACT) =
+      DEPENDS ON Abstandslinien_ZH_V5.Rechtsvorschriften;
+
+      !! Classes Allgemein
+      !!------------------
+
+      CLASS Basis_Typ_Kanton (ABSTRACT)  =
+      END Basis_Typ_Kanton;
+
+      CLASS Basis_Objekt (ABSTRACT)  =
+      END Basis_Objekt;
+
+
+      !! Associations als Vorlagen
+      !!--------------------------
+
+      !! Die Association BL_Typ zu Dokument ist hier nicht definiert. Müsste noch gemacht werden?????
+
+      !! Beziehungen:
+      !! Text/Symbol > Objekt (Geometrie) > Typ_Gemeinde > Typ_Kanton
+
+      !!ASSOCIATION Basis_Bez_Typ_Kanton_Objekt (ABSTRACT) =
+      !!   Typ_Kanton -- {1} Basis_Typ_Kanton;
+      !!   Objekt -- Basis_Objekt;
+      !!END Basis_Bez_Typ_Kanton_Objekt;
+
+      !!ASSOCIATION Basis_Bez_Typ_Gemeinde_Objekt (ABSTRACT) =
+      !!   Typ_Gemeinde -- {1} Basis_Typ_Gemeinde;
+      !!   Objekt -- {0..*} Basis_Objekt;
+      !!END Basis_Bez_Typ_Gemeinde_Objekt;
+
+      !! Associations konkret
+      !!---------------------
+      !! Beziehungen:
+      !! Objekt/Typ_Gemeinde/Typ_Kanton > Dokument
+
+      ASSOCIATION Bez_Dokument_Typ_Kanton =
+         Dokument (EXTERNAL) -- {0..*} Abstandslinien_ZH_V5.Rechtsvorschriften.RV_Dokument;
+         Typ -- {0..*} Basis_Typ_Kanton;
+      END Bez_Dokument_Typ_Kanton;
+
+      ASSOCIATION Bez_Dokument_Objekt =
+         Dokument (EXTERNAL) -- {0..*} Abstandslinien_ZH_V5.Rechtsvorschriften.RV_Dokument;
+         Objekt -- {0..*} Basis_Objekt;
+      END Bez_Dokument_Objekt;
+
+   END Grundstrukturen;
+
+   TOPIC Baulinien EXTENDS Abstandslinien_ZH_V5.Grundstrukturen =
+      DEPENDS ON Abstandslinien_ZH_V5.Rechtsvorschriften;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         BL_Codes = (
+            Baulinie (
+               Verkehr,
+               Betriebsanlage,
+               Gewaesser,
+               Versorgung),
+            Ski_Schlittellinie,
+            andere
+         );
+
+         BL_BehoerdeFestsetzung = (
+            RR,
+            BD,
+            VD,
+            Gemeinde_Legislative,
+            Gemeinde_Exekutive,
+            andere
+         );
+
+         BL_BehoerdeGenehmigung = (
+            RR,
+            BD,
+            VD,
+            AFV,
+            AFM,
+            TBA,
+            andere
+         );
+
+         BL_BehoerdeinKraftsetzung = (
+            RR,
+            BD,
+            VD,
+            AFV,
+            AFM, 
+            TBA,            andere
+         );
+
+         BL_Zustaendigkeit = (
+            kommunal,
+            kantonal
+         );
+
+         BL_Zweck = (
+            geschlossene_Bauweise,
+            Vertikalbereich,
+            andere
+         );
+
+         BL_Linien_Punkt_Typ = (
+            Zwischenpunkt, 
+            Endpunkt
+         );
+
+      BL_Verfahren = (
+        kantonal, 
+        kommunal, 
+        Nutzungsplanung, 
+        Gestaltungsplan, 
+        Quartierplan);
+
+      !! Classes
+      !!--------
+
+      CLASS BL_Typ
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY BL_Codes;
+
+      UNIQUE
+         Code;
+
+      END BL_Typ;
+
+      CLASS BL_Linie
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Objekt =
+
+         BFS_Nummer : MANDATORY CHMunicipalityCode;
+         Gemeinde_Name : TEXT*80;
+
+         publiziertAb : MANDATORY XMLDate;
+         publiziertBis : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         Identifikator : UUIDOID;
+
+         Vorpruefung_Behoerde : TEXT*80;
+         Vorpruefung_Datum : XMLDate;
+         Vorpruefung_Nummer : TEXT*80;
+
+         OeffentlicheAuflage_Behoerde : TEXT*80;
+         OeffentlicheAuflage_Datum : XMLDate;
+         OeffentlicheAuflage_Nummer : TEXT*80;
+
+         Festsetzung_Behoerde_Auswahl : BL_BehoerdeFestsetzung;
+         Festsetzung_Behoerde : TEXT*80;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         Genehmigung_Behoerde_Auswahl : BL_BehoerdeGenehmigung;
+         Genehmigung_Behoerde : TEXT*80;
+         Genehmigung_Datum : XMLDate;
+         Genehmigung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde_Auswahl : BL_BehoerdeinKraftsetzung;
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Zustaendigkeit : MANDATORY BL_Zustaendigkeit;
+         Niveaulinie : JaNein;
+         BL_Verfahren:  BL_Verfahren; 
+
+      UNIQUE
+         Identifikator;
+
+      MANDATORY CONSTRAINT
+         !! wenn Festsetzung_Behoerde_Auswahl == andere -> Festsetzung_Behoerde muss definiert sein
+         !! wenn Festsetzung_Behoerde_Auswahl != andere -> Festsetzung_Behoerde = Festsetzung_Behoerde_Auswahl
+         NOT (DEFINED(Festsetzung_Behoerde_Auswahl)) AND NOT (DEFINED(Festsetzung_Behoerde))
+         OR
+         (DEFINED(Festsetzung_Behoerde_Auswahl) AND (Festsetzung_Behoerde_Auswahl == #andere) AND DEFINED(Festsetzung_Behoerde))
+         OR
+         (DEFINED(Festsetzung_Behoerde_Auswahl) AND (Festsetzung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(Festsetzung_Behoerde)));
+
+      MANDATORY CONSTRAINT
+         !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+         !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+         NOT (DEFINED(Genehmigung_Behoerde_Auswahl)) AND NOT (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl == #andere) AND DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(Genehmigung_Behoerde)));
+
+      MANDATORY CONSTRAINT
+         !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+         !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+         NOT (DEFINED(inKraftsetzung_Behoerde_Auswahl)) AND NOT (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl == #andere) AND DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(inKraftsetzung_Behoerde)));
+
+
+      END BL_Linie;
+
+      CLASS BL_Geometrie =
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Zweck_Auswahl : BL_Zweck;
+         Zweck : TEXT*80;
+         Wirksamkeit : Wirksamkeit;
+         Geometrie : MANDATORY ZHDirectedLine;
+
+      MANDATORY CONSTRAINT
+         !! wenn Zweck_Auswahl == andere -> Zweck muss definiert sein
+         !! wenn Zweck_Auswahl != andere -> Zweck = Zweck_Auswahl
+         NOT (DEFINED(Zweck_Auswahl)) AND NOT (DEFINED(Zweck))
+         OR
+         (DEFINED(Zweck_Auswahl) AND (Zweck_Auswahl == #andere) AND DEFINED(Zweck))
+         OR
+         (DEFINED(Zweck_Auswahl) AND (Zweck_Auswahl != #andere) AND NOT ( DEFINED(Zweck)));
+
+      END BL_Geometrie;
+
+      CLASS BL_Linien_Punkt
+            EXTENDS Abstandslinien_ZH_V5.Linien_Punkt =
+         Code : BL_Codes;
+         Typ : BL_Linien_Punkt_Typ;
+      END BL_Linien_Punkt;
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION Bez_BL_Typ =
+         Typ -- {1} BL_Typ;
+         Objekt -- {0..*} BL_Linie;
+      END Bez_BL_Typ;
+
+      ASSOCIATION Bez_BL_Linie_Geometrie =
+         Linie -- {1} BL_Linie;
+         Geometrie -- {0..*} BL_Geometrie;
+      END Bez_BL_Linie_Geometrie;
+
+   END Baulinien;
+
+
+   TOPIC Gewaesserabstandslinien EXTENDS Abstandslinien_ZH_V5.Grundstrukturen =
+      DEPENDS ON Abstandslinien_ZH_V5.Rechtsvorschriften;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         GA_Codes = (
+            Gewaesserabstandslinie
+         );
+
+         GA_Verfahren = (
+            Nutzungsplanung,
+            Gestaltungsplan,
+            Quartierplan
+         );
+
+         GA_BehoerdeFestsetzung = (
+            Gemeinde_Legislative,
+            Exekutive
+         );
+
+         GA_BehoerdeGenehmigung = (
+            RR,
+            BD,
+            VD,
+            andere
+         );
+
+         GA_BehoerdeinKraftsetzung = (
+            Legislative,
+            Exekutive
+         );
+
+
+      !! Classes
+      !!--------
+
+      CLASS GA_Typ
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY GA_Codes;
+         Bemerkungen : MTEXT*2400;
+
+      UNIQUE
+         Code;
+
+      END GA_Typ;
+
+      CLASS GA_Linie
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Objekt =
+
+         BFS_Nummer : MANDATORY CHMunicipalityCode;
+         Gemeinde_Name : TEXT*80;
+
+         publiziertAb : MANDATORY XMLDate;
+         publiziertBis : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         Identifikator : UUIDOID;
+
+         Verfahren: MANDATORY GA_Verfahren;
+
+         Vorpruefung_Behoerde : TEXT*80;
+         Vorpruefung_Datum : XMLDate;
+         Vorpruefung_Nummer : TEXT*80;
+
+         OeffentlicheAuflage_Behoerde : TEXT*80;
+         OeffentlicheAuflage_Datum : XMLDate;
+         OeffentlicheAuflage_Nummer : TEXT*80;
+
+         Festsetzung_Behoerde : TEXT*80;
+         Festsetzung_Behoerde_Gewalt : GA_BehoerdeFestsetzung;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         Genehmigung_Behoerde_Auswahl : GA_BehoerdeGenehmigung;
+         Genehmigung_Behoerde : TEXT*80;
+         Genehmigung_Datum : XMLDate;
+         Genehmigung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Behoerde_Gewalt : GA_BehoerdeinKraftsetzung;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         UeberweisungLegislative_Datum: XMLDate;
+         UeberweisungLegislative_Nummer: TEXT*80;
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Wirksamkeit : Wirksamkeit;
+         Geometrie : MANDATORY ZHDirectedLine;
+
+
+      MANDATORY CONSTRAINT
+         !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+         !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+         NOT (DEFINED(Genehmigung_Behoerde_Auswahl)) AND NOT (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl == #andere) AND DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(Genehmigung_Behoerde)));
+
+      END GA_Linie;
+
+      CLASS GA_Linien_Punkt
+            EXTENDS Abstandslinien_ZH_V5.Linien_Punkt =
+      END GA_Linien_Punkt;
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION Bez_GA_Typ =
+         Typ -- {1} GA_Typ;
+         Objekt -- {0..*} GA_Linie;
+      END Bez_GA_Typ;
+
+   END Gewaesserabstandslinien;
+
+
+   TOPIC Waldabstandslinien EXTENDS Abstandslinien_ZH_V5.Grundstrukturen =
+      DEPENDS ON Abstandslinien_ZH_V5.Rechtsvorschriften;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         !! Codes Kanton
+
+         WA_Codes = (
+            Waldabstandslinie
+         );
+
+         WA_Verfahren = (
+            Nutzungsplanung,
+            Gestaltungsplan,
+            Quartierplan
+         );
+
+         WA_BehoerdeFestsetzung = (
+            Gemeinde_Legislative,
+            Exekutive
+         );
+
+         WA_BehoerdeGenehmigung = (
+            RR,
+            BD,
+            VD,
+            andere
+         );
+
+         WA_BehoerdeinKraftsetzung = (
+            Legislative,
+            Exekutive
+         );
+
+      !! Classes
+      !!--------
+
+      CLASS WA_Typ
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY WA_Codes;
+         Bemerkungen : MTEXT*2400;
+         Verbindlichkeit :  Verbindlichkeit;
+
+      UNIQUE
+         Code;
+
+      END WA_Typ;
+
+      CLASS WA_Linie
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Objekt =
+
+         BFS_Nummer : MANDATORY CHMunicipalityCode;
+         Gemeinde_Name : TEXT*80;
+
+         publiziertAb : MANDATORY XMLDate;
+         publiziertBis : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         Identifikator : UUIDOID;
+
+         Verfahren: MANDATORY WA_Verfahren;
+
+         Vorpruefung_Behoerde : TEXT*80;
+         Vorpruefung_Datum : XMLDate;
+         Vorpruefung_Nummer : TEXT*80;
+
+         OeffentlicheAuflage_Behoerde : TEXT*80;
+         OeffentlicheAuflage_Datum : XMLDate;
+         OeffentlicheAuflage_Nummer : TEXT*80;
+
+         Festsetzung_Behoerde : TEXT*80;
+         Festsetzung_Behoerde_Gewalt : WA_BehoerdeFestsetzung;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         Genehmigung_Behoerde_Auswahl : WA_BehoerdeGenehmigung;
+         Genehmigung_Behoerde : TEXT*80;
+         Genehmigung_Datum : XMLDate;
+         Genehmigung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Behoerde_Gewalt : WA_BehoerdeinKraftsetzung;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         UeberweisungLegislative_Datum: XMLDate;
+         UeberweisungLegislative_Nummer: TEXT*80;
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Wirksamkeit : Wirksamkeit;
+         Geometrie : MANDATORY ZHDirectedLine;
+
+      MANDATORY CONSTRAINT
+         !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+         !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+         NOT (DEFINED(Genehmigung_Behoerde_Auswahl)) AND NOT (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl == #andere) AND DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(Genehmigung_Behoerde)));
+
+
+      END WA_Linie;
+
+      CLASS WA_Linien_Punkt
+            EXTENDS Abstandslinien_ZH_V5.Linien_Punkt =
+      END WA_Linien_Punkt;
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION Bez_WA_Typ =
+         Typ -- {1} WA_Typ;
+         Objekt -- {0..*} WA_Linie;
+      END Bez_WA_Typ;
+
+   END Waldabstandslinien;
+
+
+   TOPIC Waldgrenzen EXTENDS Abstandslinien_ZH_V5.Grundstrukturen =
+      DEPENDS ON Abstandslinien_ZH_V5.Rechtsvorschriften;
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         !! Codes Kanton
+
+         WG_dynamisch_Codes = (
+            dynamisch
+         );
+
+         WG_statisch_Codes = (
+            statisch 
+         );
+
+         WG_BehoerdeFestsetzung = (
+            ALN,
+            BAFU,
+            RR
+         );
+
+         WG_BehoerdeGenehmigung = (
+            BD,
+            VD,
+            ALN,
+            andere
+         );
+
+         WG_BehoerdeinKraftsetzung = (
+            RR,
+            BD,
+            VD,
+            ALN,
+            andere
+         );
+
+         WG_Punkt_Codes = (
+            dynamisch,
+            statisch
+         );
+
+         Art_Waldgrenze = (
+           in_Bauzonen,
+           ausserhalb_Bauzonen
+         );
+
+      !! Waldgrenzen dynamisch (WaG 10)
+      !!-------------------------------
+
+      !! Classes
+      !!--------
+
+      CLASS WG_dynamisch_Typ
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY WG_dynamisch_Codes;
+         Bemerkungen : MTEXT*2400;
+         Verbindlichkeit :  Verbindlichkeit;
+
+      UNIQUE
+         Code;
+
+      END WG_dynamisch_Typ;
+
+      CLASS WG_dynamisch_Linie
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Objekt =
+
+         BFS_Nummer : MANDATORY CHMunicipalityCode;
+         Gemeinde_Name : TEXT*80;
+
+         publiziertAb : MANDATORY XMLDate;
+         publiziertBis : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         Identifikator : UUIDOID;
+
+         Vorpruefung_Behoerde : TEXT*80;
+         Vorpruefung_Datum : XMLDate;
+         Vorpruefung_Nummer : TEXT*80;
+
+         OeffentlicheAuflage_Behoerde : TEXT*80;
+         OeffentlicheAuflage_Datum : XMLDate;
+         OeffentlicheAuflage_Nummer : TEXT*80;
+
+         Festsetzung_Behoerde : WG_BehoerdeFestsetzung;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         Genehmigung_Behoerde_Auswahl : WG_BehoerdeGenehmigung;
+         Genehmigung_Behoerde : TEXT*80;
+         Genehmigung_Datum : XMLDate;
+         Genehmigung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde_Auswahl : WG_BehoerdeinKraftsetzung;
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Wirksamkeit : Wirksamkeit;
+         Geometrie : MANDATORY ZHDirectedLine;
+
+      MANDATORY CONSTRAINT
+         !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+         !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+         NOT (DEFINED(Genehmigung_Behoerde_Auswahl)) AND NOT (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl == #andere) AND DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(Genehmigung_Behoerde)));
+
+
+      MANDATORY CONSTRAINT
+         !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+         !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+         NOT (DEFINED(inKraftsetzung_Behoerde_Auswahl)) AND NOT (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl == #andere) AND DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(inKraftsetzung_Behoerde)));
+
+      END WG_dynamisch_Linie;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION Bez_WG_dynamisch_Typ =
+         Typ -- {1} WG_dynamisch_Typ;
+         Objekt -- {0..*} WG_dynamisch_Linie;
+      END Bez_WG_dynamisch_Typ;
+
+
+      !! Waldgrenzen statisch (WaG 13)
+      !!------------------------------
+
+      !! Classes
+      !!--------
+
+      CLASS WG_statisch_Typ
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Typ_Kanton =
+
+         Code : MANDATORY WG_statisch_Codes;
+         Bemerkungen : MTEXT*2400;
+         Verbindlichkeit :  Verbindlichkeit;
+
+      UNIQUE
+         Code;
+
+      END WG_statisch_Typ;
+
+      CLASS WG_statisch_Linie
+            EXTENDS Abstandslinien_ZH_V5.Grundstrukturen.Basis_Objekt =
+
+         BFS_Nummer : MANDATORY CHMunicipalityCode;
+         Gemeinde_Name : TEXT*80;
+
+         publiziertAb : MANDATORY XMLDate;
+         publiziertBis : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         Identifikator : UUIDOID;
+
+         Vorpruefung_Behoerde : TEXT*80;
+         Vorpruefung_Datum : XMLDate;
+         Vorpruefung_Nummer : TEXT*80;
+
+         OeffentlicheAuflage_Behoerde : TEXT*80;
+         OeffentlicheAuflage_Datum : XMLDate;
+         OeffentlicheAuflage_Nummer : TEXT*80;
+
+         Festsetzung_Behoerde : WG_BehoerdeFestsetzung;
+         Festsetzung_Datum : XMLDate;
+         Festsetzung_Nummer : TEXT*80;
+
+         Genehmigung_Behoerde_Auswahl : WG_BehoerdeGenehmigung;
+         Genehmigung_Behoerde : TEXT*80;
+         Genehmigung_Datum : XMLDate;
+         Genehmigung_Nummer : TEXT*80;
+
+         inKraftsetzung_Behoerde_Auswahl : WG_BehoerdeinKraftsetzung;
+         inKraftsetzung_Behoerde : TEXT*80;
+         inKraftsetzung_Datum : XMLDate;
+         inKraftsetzung_Nummer : TEXT*80;
+
+         Rechtsstatus : MANDATORY RechtsstatusObjekt;
+         Wirksamkeit : Wirksamkeit;
+         Art : Art_Waldgrenze;
+         Geometrie : MANDATORY ZHDirectedLine;
+
+      MANDATORY CONSTRAINT
+         !! wenn Genehmigung_Behoerde_Auswahl == andere -> Genehmigung_Behoerde muss definiert sein
+         !! wenn Genehmigung_Behoerde_Auswahl != andere -> Genehmigung_Behoerde = Genehmigung_Behoerde_Auswahl
+         NOT (DEFINED(Genehmigung_Behoerde_Auswahl)) AND NOT (DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl == #andere) AND DEFINED(Genehmigung_Behoerde))
+         OR
+         (DEFINED(Genehmigung_Behoerde_Auswahl) AND (Genehmigung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(Genehmigung_Behoerde)));
+
+
+      MANDATORY CONSTRAINT
+         !! wenn inKraftsetzung_Behoerde_Auswahl == andere -> inKraftsetzung_Behoerde muss definiert sein
+         !! wenn inKraftsetzung_Behoerde_Auswahl != andere -> inKraftsetzung_Behoerde = inKraftsetzung_Behoerde_Auswahl
+         NOT (DEFINED(inKraftsetzung_Behoerde_Auswahl)) AND NOT (DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl == #andere) AND DEFINED(inKraftsetzung_Behoerde))
+         OR
+         (DEFINED(inKraftsetzung_Behoerde_Auswahl) AND (inKraftsetzung_Behoerde_Auswahl != #andere) AND NOT( DEFINED(inKraftsetzung_Behoerde)));
+
+      END WG_statisch_Linie;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION Bez_WG_statisch_Typ =
+         Typ -- {1} WG_statisch_Typ;
+         Objekt -- {0..*} WG_statisch_Linie;
+      END Bez_WG_statisch_Typ;
+
+
+      !! Linien Punkte
+      !!--------------
+      CLASS WG_Linien_Punkt
+            EXTENDS Abstandslinien_ZH_V5.Linien_Punkt =
+         Code: WG_Punkt_Codes;
+      END WG_Linien_Punkt;
+
+   END Waldgrenzen;
+
+   TOPIC Projekte =
+      DEPENDS ON Abstandslinien_ZH_V5.Baulinien;
+      DEPENDS ON Abstandslinien_ZH_V5.Gewaesserabstandslinien;
+      DEPENDS ON Abstandslinien_ZH_V5.Waldabstandslinien;
+      DEPENDS ON Abstandslinien_ZH_V5.Waldgrenzen;
+
+
+      CLASS Projekt =
+
+         Nummer : MANDATORY TEXT*80;
+         Bewirtschafter : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+         Projektzustand : RechtsstatusObjekt;
+         DatumLetztePublikation : XMLDate;
+
+      UNIQUE
+         Nummer;
+
+      END Projekt;
+
+      CLASS Projekt_Perimeter =
+
+         Geometrie : MANDATORY ZHSurface;
+
+      END Projekt_Perimeter;
+
+      CLASS Variante =
+
+         Nummer : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+
+      END Variante;
+
+
+      ASSOCIATION Bez_Projekt_Perimeter =
+
+         ProjektRef -- {1} Projekt;
+         PerimeterRef -<> {0..*}    Projekt_Perimeter;
+
+      END Bez_Projekt_Perimeter;
+
+      ASSOCIATION Bez_Projekt_Variante =
+
+         ProjektRef -- {1} Projekt;
+         VarianteRef -<> {0..*} Variante;
+
+      END Bez_Projekt_Variante;
+
+      ASSOCIATION Ausschluss =
+
+         Variante_A_Ref -- {1..*}    Variante;
+         Variante_B_Ref -- {1..*}    Variante;
+
+      END Ausschluss;
+
+      ASSOCIATION Bez_Projekt_Objekt =
+
+         ObjektProjektRef -- {0..*} Projekt;
+         ObjektVarianteRef -- {0..1} Variante;
+
+         ObjektRef (EXTERNAL) -<> {0..*}   Abstandslinien_ZH_V5.Baulinien.BL_Linie
+                                        OR Abstandslinien_ZH_V5.Baulinien.BL_Linien_Punkt
+                                        OR Abstandslinien_ZH_V5.Gewaesserabstandslinien.GA_Linie
+                                        OR Abstandslinien_ZH_V5.Gewaesserabstandslinien.GA_Linien_Punkt
+                                        OR Abstandslinien_ZH_V5.Waldabstandslinien.WA_Linie
+                                        OR Abstandslinien_ZH_V5.Waldabstandslinien.WA_Linien_Punkt
+                                        OR Abstandslinien_ZH_V5.Waldgrenzen.WG_dynamisch_Linie
+                                        OR Abstandslinien_ZH_V5.Waldgrenzen.WG_statisch_Linie
+                                        OR Abstandslinien_ZH_V5.Waldgrenzen.WG_Linien_Punkt;
+
+      END Bez_Projekt_Objekt;
+
+   END Projekte;
+
+
+   TOPIC TransferMetadaten =
+
+      !! Classes
+      !!--------
+
+      CLASS Amt =
+         Name :           MANDATORY TEXT*80;
+         Foederale_Stufe: MANDATORY (Bund, Kanton, Gemeinde);
+         BFS_Nummer:      CHAdminCodes_V1.CHMunicipalityCode; !! Nur falls Foederale_Stufe = Gemeinde
+         Kuerzel:         CHAdminCodes_V1.CHCantonCode;  !! Nur falls Foederale_Stufe = Bund oder Kanton
+         AmtImWeb:        URI;
+         UID:             TEXT*20;
+         Zeile1:          TEXT*255;
+         Zeile2:          TEXT*255;
+         Strasse:         TEXT*60;
+         Hausnr:          TEXT*12;
+         PLZ:             1000..9999;
+         Ort:             TEXT*40;
+      END Amt;
+
+      CLASS Darstellungsdienst =
+         VerweisWMS : URI;
+         LegendeImWeb : URI;
+      END Darstellungsdienst;
+
+      CLASS Datenbestand =
+         BasketId : TEXT*80;
+         Stand : MANDATORY XMLDate;
+         Lieferdatum : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         weitereMetadaten : URI;
+      END Datenbestand;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION zustaendigeStelleDatenbestand =
+         zustaendigeStelle -- {1} Amt;
+         Datenbestand -<> {0..*} Datenbestand;
+      END zustaendigeStelleDatenbestand;
+
+      ASSOCIATION DarstellungsdienstDatenbestand =
+         Darstellungsdienst -- {1} Darstellungsdienst;
+         Datenbestand -<> {0..*} Datenbestand;
+      END DarstellungsdienstDatenbestand;
+
+   END TransferMetadaten;
+
+END Abstandslinien_ZH_V5.
