@@ -38,6 +38,7 @@
 !! 2017.03.18/ht Art_Waldgrenze eingefügt wegen Minimale Geodatenmodelle Bereich Nutzungsplanung
 !! 2022.09.14/ht Anpassung an Revision ÖREB Rahmenmodell / MGDM, Version 5.0 
 !! 2022.09.16/mf RV_Dokument Attribute ergänzen
+!! 2022.10.06/ht Tabelle RV_Dokument: NurInGemeinde und AuszugIndex neu OPTIONAL, Tabellen _PROJ auf NO IDENT gesetzt
 !!===================================================================================== 
 !! Bemerkungen:
 !!
@@ -65,7 +66,7 @@ TRANSFER Abstandslinien_ZH;
 !!@ furtherInformation=http://www.bd.zh.ch
 !!@ technicalContact=are@bd.zh.ch
 !!* @Issuer http://www.bd.zh.ch/models
-!!* @Version 2017-03-21
+!!* @Version 2022-10-06
 
 MODEL Abstandslinien_ZH_V5
 
@@ -345,8 +346,8 @@ MODEL Abstandslinien_ZH_V5
       publiziertBis : OPTIONAL DATE;
       Rechtsstatus : DokumentRechtsstatus;
       TextImWeb : OPTIONAL URI;
-      NurInGemeinde : CHMunicipalityCode;
-      AuszugIndex : [-1000..1000];      
+      NurInGemeinde : OPTIONAL CHMunicipalityCode;
+      AuszugIndex : OPTIONAL [-1000..1000];      
       Dokument : OPTIONAL BLOB;
       Bemerkungen : OPTIONAL TEXT*2400;
       Genehmigungsdatum : OPTIONAL DATE;
@@ -506,8 +507,7 @@ MODEL Abstandslinien_ZH_V5
       RG_GID: OPTIONAL GIDTYPE;
       ProjektRef : -> Projekt;
       VarianteRef : OPTIONAL -> Variante;
-    IDENT
-      Identifikator, ProjektRef;
+    NO IDENT
     END BL_Linie_PROJ;
 
     TABLE Bez_RV_BL_Linie_PROJ = 

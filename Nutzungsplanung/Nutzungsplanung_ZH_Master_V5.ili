@@ -37,7 +37,7 @@ INTERLIS 2.3;
 !!@ furtherInformation = http://www.bd.zh.ch
 !! @ IDGeoIV = "73,145"
 
-CONTRACTED MODEL Nutzungsplanung_ZH_V5 (de) AT "http://www.bd.zh.ch/models" VERSION "2022-09-19"  =
+CONTRACTED MODEL Nutzungsplanung_ZH_V5 (de) AT "http://models.geo.zh.ch" VERSION "2022-09-30"  =
 
    IMPORTS UNQUALIFIED INTERLIS;
    IMPORTS UNQUALIFIED Units;

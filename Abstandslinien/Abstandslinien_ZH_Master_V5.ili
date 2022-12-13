@@ -38,7 +38,7 @@ INTERLIS 2.3;
 !!@ furtherInformation = http://www.bd.zh.ch
 !! @ IDGeoIV = "42-ZH,44-ZH,45-ZH,157,159"
 
-MODEL Abstandslinien_ZH_V5 (de) AT "http://www.bd.zh.ch/models" VERSION "2022-09-19"  =
+MODEL Abstandslinien_ZH_V5 (de) AT "http://models.geo.zh.ch" VERSION "2022-09-30"  =
 
    IMPORTS UNQUALIFIED INTERLIS;
    IMPORTS UNQUALIFIED Units;
