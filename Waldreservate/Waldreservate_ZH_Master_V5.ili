@@ -1,0 +1,401 @@
+!!===================================================================================== 
+!! Kanton Zürich 
+!! Baudirektion Kanton Zürich
+!! Amt für Raumentwicklung
+!! Abteilung Geoinformation
+!! Stampfenbachstrasse 12
+!! 8090 Zürich
+!!
+!! www.geoportal.zh.ch
+!!
+!! Geobasisdatensatz Nr. 160-ZH Waldreservate des Kantons
+!! Transfermodell
+!!=====================================================================================
+!! Revision History
+!!
+!! 2016.02.21/mg erstellt
+!! 2016.02.23/mg überarbeitet in FIG2
+!! 2016.03.06/mg überarbeitet gemäss Protokoll FIG2
+!! 2016.03.11/mg Name -> WaldreservatName wegen Liste KKGEO
+!!               bessere Namen für Rollen
+!!               Konsistenzbedingungen formuliert
+!!               formalisierte Kommentare
+!! 2016.11.10/mg Diverse Anpassungen
+!! 2017.10.09/mg Wertebreichskorrekturen
+!! 2023.03.29/ht Anpassung an ÖREB Rahmenmodell-MGDM und Einfuehrung Projekt
+!! 2023.07.04/ht Class Gemeinde eingefügt.
+!!               Waldreservat: OffizielleFlaeche, GISFlaeche, VertragsDokument gelöscht. LetzteAenderung auf publiziertAb geändert.
+!!               Waldreservat_Teilobjekt: Waldreservat_Teilobjekt_ID, Flaeche, publiziertAb gelöscht.
+!!                                        VertragsDokument, GesGrundlage, NFA eingefügt.
+!!                                        LetzteAenderung auf publiziertAb geändert.
+!! 2023.07.24/mf MCPFE-Klasse "nicht_MCPFE" ergänzt
+!! 2023.09.07/ht Class Gemeinde (TOPIC Verwaltung) geloescht
+!!=====================================================================================
+!! Bemerkungen:
+!!
+!! - Die Teilobjekte sind ein Verschnitt aus Waldreservaten
+!!   und kantonaler Schutzzonenverordnung (SVO)
+!!=====================================================================================
+
+INTERLIS 2.3;
+
+!!@ GeoLion="http://www.geolion.zh.ch/geodatensatz/show?nbid=1885"
+
+MODEL Waldreservate_ZH_V5 (de)
+
+   AT "http://models.geo.zh.ch" VERSION "2023-09-11" =
+
+   IMPORTS UNQUALIFIED INTERLIS;
+   IMPORTS Units;
+   IMPORTS CoordSys;
+   IMPORTS UNQUALIFIED GeometryCHLV95_V1;
+   IMPORTS UNQUALIFIED CHAdminCodes_V1;
+
+   REFSYSTEM BASKET BCoordSys ~ CoordSys.CoordsysTopic
+      OBJECTS OF GeoCartesian2D: CHLV95
+      OBJECTS OF GeoHeight: SwissOrthometricAlt;
+
+   DOMAIN
+
+      ZHPoint = COORD
+         2480000.000 .. 2850000.000 [m] {CHLV95[1]},
+         1070000.000 .. 1310000.000 [m] {CHLV95[2]},
+         ROTATION 2 -> 1;
+
+      ZHSurface = SURFACE WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+
+      ZHArea = AREA WITH (STRAIGHTS, ARCS) VERTEX ZHPoint WITHOUT OVERLAPS > 0.001;
+
+      RechtsstatusObjekt = (
+         inKraft,
+         laufendeAenderung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Rechtsmittelverfahren
+         ),
+         Aufhebung (
+            Vorpruefung,
+            oeffentliche_Auflage,
+            Festsetzung,
+            Rechtsmittelverfahren
+         )
+      );
+      
+      Grundlage = (
+         WaG,
+         NHG,
+         KVO,
+         Andere
+      );
+
+   TOPIC Rechtsvorschriften =
+
+      !! Domains
+      !!--------
+
+      DOMAIN
+
+         DokumentTyp = (
+           Rechtsvorschrift,
+           GesetzlicheGrundlage,
+           Hinweis
+         );
+
+         DokumentRechtsstatus = (
+            inKraft,
+            laufendeAenderung,
+            Aufhebung,
+            provisorisch
+         );
+
+         DokumentID = 0 .. 999999;
+
+      !! Classes
+      !!--------
+
+      CLASS RV_Dokument =
+         DocId : MANDATORY DokumentID;
+         Typ : MANDATORY DokumentTyp;
+         Titel : MANDATORY TEXT*80;
+         OffiziellerTitel : TEXT*2400;
+         Abkuerzung : TEXT*10;
+         OffizielleNr : TEXT*20;
+         Kanton : CHAdminCodes_V1.CHCantonCode;
+         Gemeinde : CHAdminCodes_V1.CHMunicipalityCode;
+         publiziertAb : MANDATORY XMLDate;
+         publiziertBis : XMLDate;
+         Rechtsstatus : MANDATORY DokumentRechtsstatus;
+         TextImWeb : URI;
+         NurInGemeinde : CHMunicipalityCode;
+         AuszugIndex : -1000 .. 1000;
+         Dokument : BLACKBOX BINARY;
+         Bemerkungen : MTEXT*2400;
+         Genehmigungsdatum : XMLDate;
+      END RV_Dokument;
+
+
+      !! Associations
+      !!-------------
+
+      ASSOCIATION RV_HinweisWeitereDokumente =
+         Ursprung -- {0..*} RV_Dokument;
+         Hinweis -- {0..*} RV_Dokument;
+      END RV_HinweisWeitereDokumente;
+
+   END Rechtsvorschriften;
+
+   TOPIC Waldreservate =
+
+      DEPENDS ON Waldreservate_ZH_V5.Rechtsvorschriften;
+
+       DOMAIN
+       
+         !!@ comment="Entspricht MCPFE_Class im MGDM";
+         MCPFEKlassen = (
+            MCPFE1_1,
+            MCPFE1_2,
+            MCPFE1_3,
+            nicht_MCPFE
+         );
+
+         !!@ comment="kantonale Klassifikation des Teilobjekts";
+         KantKlassen = (
+            Kernzone,              !! KEZ
+            freie_Waldentwicklung, !! FWE
+            Sicherheitszone,       !! SIC
+            Nachbarschaftzone,     !! NAB
+            Sonderwaldreservat,    !! SON
+            offene_Flaechen,       !! OFF
+            Randzone
+         );
+
+
+      !!@ comment="entspricht Klasse Waldreservat im MGDM";
+      CLASS Waldreservat =
+
+         !!@ comment="entspricht Attribut ObjNummer in MGDM Bund";
+         WaldreservatNummer: MANDATORY TEXT*30;
+
+         !!@ comment="entspricht Attribut Name in MGDM Bund";
+         WaldreservatName: MANDATORY TEXT*255;
+
+         !!@ comment="Identifikation des Benutzers welcher die letzte Mutation ausführte";
+         MutBenutzer: MANDATORY TEXT*20; 
+         
+         publiziertAb: MANDATORY XMLDate;
+
+      END Waldreservat;
+
+      !!@ comment="entspricht Waldreservat_Teilobjekt im MGDM";
+      CLASS Waldreservat_Teilobjekt =
+
+         !!@ comment="Teilobj_Nummer gemäss Bundesmodell";
+         Teilobjektnummer: MANDATORY TEXT*15;
+
+         !!@ comment="Wenn TRUE wird Teilbobjekt an Bund geliefert, Standard: TRUE";
+         ExportMGDM: MANDATORY BOOLEAN;
+
+         !!@ comment="Entspricht MCPFE_Class im MGDM";
+         MCPFE_Klasse: MANDATORY MCPFEKlassen;
+
+         !!@ comment="kantonale Klassifikation des Teilobjekts";
+         Reservatszone: KantKlassen;
+
+         !!@ comment="Referenz auf Vertrag"
+         VertragsDokument : URI;
+
+         !!@ comment="Nummer des zugehörigen Vertrag";
+         Vertragsnummer: TEXT*9;
+
+         !!@ comment="Anfangsdatum des Vertrag";
+         VertragGueltigAb: XMLDate;
+         
+         !!@ comment="Enddatum des Vertrag";
+         VertragGueltigBis: XMLDate;
+
+         !!@ comment="Identifikation der anrechenbaren SVO";
+         SVONummer: TEXT*9;
+
+         !!@ comment="Anfangsdatum des SVO Vertrag";
+         SVOGueltigAb: XMLDate;
+         
+         !!@ comment="Vertragsfläche in ha, entspricht Obj_GISTeilobjekt im MGDM";
+         VertragsFlaeche: MANDATORY 0.0 .. 999999.0 [Units.ha];
+
+         !!@ comment="Geometrie des Teilobjekts, alle Teilobjekte bilden ein Flächennetz";
+         !!@ comment="entspricht Geo_Obj im MGDM";
+         Geometrie: MANDATORY ZHArea;
+
+         ProjGeometrie : ZHSurface;
+
+         !!@ comment="Textfeld für Bemerkungen zum Teilobjekte";
+         Bemerkungen: TEXT*100;
+
+         !!@ comment="Identifikation des Benutzers welcher die letzte Mutation ausführte";
+         MutBenutzer: MANDATORY TEXT*20; 
+
+         !!@ comment="Datum der letzten Mutation";
+         publiziertAb: MANDATORY XMLDate;
+
+         Rechtsstatus : RechtsstatusObjekt;
+         
+         !!@ comment = "Gesetzliche Grundlage";
+         GesGrundlage : Grundlage;
+         
+         !!@ comment = "Finanzierung mit Beteiligung von Bundesmitteln des NFA (Nationale Finanzausgleich)";
+         NFA: (Ja, Nein);
+         
+      MANDATORY CONSTRAINT
+         !! wenn Rechsstatus == inKraft -> Geometrie muss definiert sein,   ProjGeometrie muss undefiniert sein
+         !! wenn Rechsstatus != inKraft -> Geometrie muss undefiniert sein, ProjGeometrie muss definiert sein
+         !! Geometrie muss definiert sein
+         !! ProjGeometrie darf nicht definiert sein
+         ((Rechtsstatus == #inKraft) AND DEFINED(Geometrie) AND NOT (DEFINED(ProjGeometrie)))
+         OR
+         ((Rechtsstatus != #inKraft) AND NOT (DEFINED(Geometrie)) AND DEFINED(ProjGeometrie));
+
+
+      !!@ cat="error";
+      !!@ cmsg_de="Wenn Vetragsnummer definiert ist muss auch Vertrag-GueltigAb definiert sein";
+      MANDATORY CONSTRAINT
+            DEFINED(Vertragsnummer) == DEFINED(VertragGueltigAb);
+         
+      !!@ cat="error";
+      !!@ cmsg_de="Wenn Vetragsnummer definiert ist muss auch Vertrag-GueltigBis definiert sein";
+      MANDATORY CONSTRAINT
+            DEFINED(Vertragsnummer) == DEFINED(VertragGueltigBis);
+         
+      !!@ cat="error";
+      !!@ cmsg_de="Wenn SVONummer definiert ist muss auch SVOGueltigAb definiert sein";
+      MANDATORY CONSTRAINT
+            DEFINED(SVONummer) == DEFINED(SVOGueltigAb);
+                  
+      END Waldreservat_Teilobjekt;
+
+      ASSOCIATION Bez_RV_Dokument_Waldreservat_Teilobjekt =
+         Dokument (EXTERNAL) -- {0..*} Waldreservate_ZH_V5.Rechtsvorschriften.RV_Dokument;
+         zuTeilobjekt -- {0..*} Waldreservat_Teilobjekt;
+      UNIQUE
+         Dokument, zuTeilobjekt;
+      END Bez_RV_Dokument_Waldreservat_Teilobjekt;
+
+      ASSOCIATION WaldreservatWaldreservat_Teilobjekt =
+         !!@ comment="Verknüpfung mit zugehörigem Walderservat";
+         Waldreservat -<#> {1} Waldreservat;
+         Teilobjekt -- {1..*} Waldreservat_Teilobjekt;
+      END WaldreservatWaldreservat_Teilobjekt;
+
+   END Waldreservate;
+
+   TOPIC Projekte =
+      DEPENDS ON Waldreservate_ZH_V5.Waldreservate;
+
+      CLASS Projekt =
+
+         Nummer : MANDATORY TEXT*80;
+         Bewirtschafter : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+         Projektzustand : RechtsstatusObjekt;
+         DatumLetztePublikation : XMLDate;
+
+      UNIQUE
+         Nummer;
+
+      END Projekt;
+
+      CLASS Projekt_Perimeter =
+
+         Geometrie : MANDATORY ZHSurface;
+
+      END Projekt_Perimeter;
+
+      CLASS Variante =
+
+         Nummer : MANDATORY TEXT*80;
+         Eroeffnungsdatum : MANDATORY XMLDate;
+
+      END Variante;
+
+
+      ASSOCIATION Bez_Projekt_Perimeter =
+
+         ProjektRef -- {1} Projekt;
+         PerimeterRef -<> {0..*}    Projekt_Perimeter;
+
+      END Bez_Projekt_Perimeter;
+
+      ASSOCIATION Bez_Projekt_Variante =
+
+         ProjektRef -- {1} Projekt;
+         VarianteRef -<> {0..*} Variante;
+
+      END Bez_Projekt_Variante;
+
+      ASSOCIATION Ausschluss =
+
+         Variante_A_Ref -- {0..*}    Variante;
+         Variante_B_Ref -- {0..*}    Variante;
+
+      END Ausschluss;
+
+      ASSOCIATION Bez_Projekt_Objekt =
+
+         ObjektProjektRef -- {0..*} Projekt;
+         ObjektVarianteRef -- {0..1} Variante;
+
+         ObjektRef (EXTERNAL) -<> {0..*}   Waldreservate_ZH_V5.Waldreservate.Waldreservat;
+
+      END Bez_Projekt_Objekt;
+
+   END Projekte;
+
+   TOPIC TransferMetadaten =
+
+      !! Classes
+      !!--------
+
+      CLASS Amt =
+         Name :           MANDATORY TEXT*80;
+         Foederale_Stufe: MANDATORY (Bund, Kanton, Gemeinde);
+         BFS_Nummer:      CHAdminCodes_V1.CHMunicipalityCode; !! Nur falls Foederale_Stufe = Gemeinde
+         Kuerzel:         CHAdminCodes_V1.CHCantonCode;  !! Nur falls Foederale_Stufe = Bund oder Kanton
+         AmtImWeb:        URI;
+         UID:             TEXT*20;
+         Zeile1:          TEXT*255;
+         Zeile2:          TEXT*255;
+         Strasse:         TEXT*60;
+         Hausnr:          TEXT*12;
+         PLZ:             1000..9999;
+         Ort:             TEXT*40;
+      END Amt;
+
+      CLASS Darstellungsdienst =
+         VerweisWMS : URI;
+         LegendeImWeb : URI;
+      END Darstellungsdienst;
+
+      CLASS Datenbestand =
+         BasketId : TEXT*80;
+         Stand : MANDATORY XMLDate;
+         Lieferdatum : XMLDate;
+         Bemerkungen : MTEXT*2400;
+         weitereMetadaten : URI;
+      END Datenbestand;
+
+      !! Associations
+      !!-------------
+      ASSOCIATION zustaendigeStelleDatenbestand =
+         zustaendigeStelle -- {1} Amt;
+         Datenbestand -<> {0..*} Datenbestand;
+      END zustaendigeStelleDatenbestand;
+
+      ASSOCIATION DarstellungsdienstDatenbestand =
+         Darstellungsdienst -- {1} Darstellungsdienst;
+         Datenbestand -<> {0..*} Datenbestand;
+      END DarstellungsdienstDatenbestand;
+
+   END TransferMetadaten;
+
+END Waldreservate_ZH_V5.
+
